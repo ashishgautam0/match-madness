@@ -8,14 +8,18 @@ interface GameBoardProps {
   state: GameState
   progress: GameProgress
   onSelectItem: (item: GameItem, column: ColumnType) => void
-  showWrongAnimation: boolean
-  showCorrectAnimation: boolean
+  animatingSelection: {
+    french: GameItem | null
+    english: GameItem | null
+    type: GameItem | null
+  }
+  animationType: 'correct' | 'wrong' | null
 }
 
 /**
  * Main game board with three columns
  */
-export function GameBoard({ state, progress, onSelectItem, showWrongAnimation, showCorrectAnimation }: GameBoardProps) {
+export function GameBoard({ state, progress, onSelectItem, animatingSelection, animationType }: GameBoardProps) {
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 p-4">
       {/* Progress at top */}
@@ -29,8 +33,8 @@ export function GameBoard({ state, progress, onSelectItem, showWrongAnimation, s
           column="french"
           selectedItem={state.selection.french}
           onSelectItem={onSelectItem}
-          showWrongAnimation={showWrongAnimation}
-          showCorrectAnimation={showCorrectAnimation}
+          animatingItem={animatingSelection.french}
+          animationType={animationType}
         />
 
         <GameColumn
@@ -39,8 +43,8 @@ export function GameBoard({ state, progress, onSelectItem, showWrongAnimation, s
           column="english"
           selectedItem={state.selection.english}
           onSelectItem={onSelectItem}
-          showWrongAnimation={showWrongAnimation}
-          showCorrectAnimation={showCorrectAnimation}
+          animatingItem={animatingSelection.english}
+          animationType={animationType}
         />
 
         <GameColumn
@@ -49,8 +53,8 @@ export function GameBoard({ state, progress, onSelectItem, showWrongAnimation, s
           column="type"
           selectedItem={state.selection.type}
           onSelectItem={onSelectItem}
-          showWrongAnimation={showWrongAnimation}
-          showCorrectAnimation={showCorrectAnimation}
+          animatingItem={animatingSelection.type}
+          animationType={animationType}
         />
       </div>
     </div>

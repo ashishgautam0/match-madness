@@ -28,8 +28,12 @@ export function useMatchGame(config: GameConfig) {
   const [wrongAttempts, setWrongAttempts] = useState(0)
   const [startTime] = useState(Date.now())
   const [endTime, setEndTime] = useState<number | null>(null)
-  const [showWrongAnimation, setShowWrongAnimation] = useState(false)
-  const [showCorrectAnimation, setShowCorrectAnimation] = useState(false)
+  const [animatingSelection, setAnimatingSelection] = useState<{
+    french: GameItem | null
+    english: GameItem | null
+    type: GameItem | null
+  }>({ french: null, english: null, type: null })
+  const [animationType, setAnimationType] = useState<'correct' | 'wrong' | null>(null)
 
   // Services
   const { play } = useSound()
@@ -69,15 +73,25 @@ export function useMatchGame(config: GameConfig) {
             setEndTime(Date.now())
           }
 
-          console.log('About to show green animation, current selection:', engine.getState().selection)
+          // Capture the items that should animate BEFORE clearing
+          const currentSelection = engine.getState().selection
+          console.log('About to show green animation, current selection:', currentSelection)
 
-          // Show green animation on selected items
-          setShowCorrectAnimation(true)
+          // Store items for animation and set animation type
+          setAnimatingSelection({
+            french: currentSelection.french,
+            english: currentSelection.english,
+            type: currentSelection.type,
+          })
+          setAnimationType('correct')
 
           setTimeout(() => {
             console.log('Green animation timeout, clearing selection')
-            setShowCorrectAnimation(false)
-            // Call completeMatch if it exists, otherwise just update state
+            // Clear animation
+            setAnimationType(null)
+            setAnimatingSelection({ french: null, english: null, type: null })
+
+            // Call completeMatch to refill columns and clear selection
             if (typeof (engine as any).completeMatch === 'function') {
               (engine as any).completeMatch(result.matchedId!)
             }
@@ -85,20 +99,31 @@ export function useMatchGame(config: GameConfig) {
             setState(engine.getState())
           }, 300) // Shorter duration for correct matches
         } else {
-          // Wrong match - keep selection visible for animation
+          // Wrong match - capture items for animation
           play('wrong')
           trigger('error')
           setWrongAttempts(prev => prev + 1)
 
+          // Capture the items that should animate BEFORE clearing
+          const currentSelection = engine.getState().selection
+
+          // Store items for animation and set animation type
+          setAnimatingSelection({
+            french: currentSelection.french,
+            english: currentSelection.english,
+            type: currentSelection.type,
+          })
+          setAnimationType('wrong')
+
           // Update state to reset streak (but keep selection)
           setState(engine.getState())
 
-          // Show red animation FIRST
-          setShowWrongAnimation(true)
-
           // Delay clearing selection until after animation completes
           setTimeout(() => {
-            setShowWrongAnimation(false)
+            // Clear animation
+            setAnimationType(null)
+            setAnimatingSelection({ french: null, english: null, type: null })
+
             // NOW manually clear the selection
             engine.clearSelection()
             setState(engine.getState())
@@ -157,7 +182,7 @@ export function useMatchGame(config: GameConfig) {
     progress: engine.getProgress(),
     stats: getStats(),
     isComplete: state.isComplete,
-    showWrongAnimation,
-    showCorrectAnimation,
+    animatingSelection,
+    animationType,
   }
 }

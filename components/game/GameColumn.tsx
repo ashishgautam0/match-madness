@@ -9,8 +9,8 @@ interface GameColumnProps {
   column: ColumnType
   selectedItem: GameItemType | null
   onSelectItem: (item: GameItemType, column: ColumnType) => void
-  showWrongAnimation: boolean
-  showCorrectAnimation: boolean
+  animatingItem: GameItemType | null
+  animationType: 'correct' | 'wrong' | null
 }
 
 /**
@@ -22,8 +22,8 @@ export function GameColumn({
   column,
   selectedItem,
   onSelectItem,
-  showWrongAnimation,
-  showCorrectAnimation,
+  animatingItem,
+  animationType,
 }: GameColumnProps) {
   return (
     <div className="flex flex-col gap-2">
@@ -35,8 +35,10 @@ export function GameColumn({
       {/* Items */}
       <div className="flex flex-col gap-2 animate-slide-in">
         {items.map((item, index) => {
-          // Compare by both ID and position to handle duplicates
+          // Compare by object reference to handle duplicates
           const isThisItemSelected = selectedItem === item
+          const isThisItemAnimating = animatingItem === item
+
           return (
             <GameItem
               key={`${column}-${item.id}-${index}`}
@@ -44,8 +46,8 @@ export function GameColumn({
               column={column}
               isSelected={isThisItemSelected}
               onClick={onSelectItem}
-              showWrongAnimation={showWrongAnimation && isThisItemSelected}
-              showCorrectAnimation={showCorrectAnimation && isThisItemSelected}
+              showWrongAnimation={isThisItemAnimating && animationType === 'wrong'}
+              showCorrectAnimation={isThisItemAnimating && animationType === 'correct'}
             />
           )
         })}

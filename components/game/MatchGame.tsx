@@ -46,8 +46,8 @@ export function MatchGame({ config }: MatchGameProps) {
         state={game.state}
         progress={game.progress}
         onSelectItem={game.selectItem}
-        showWrongAnimation={game.showWrongAnimation}
-        showCorrectAnimation={game.showCorrectAnimation}
+        animatingSelection={game.animatingSelection}
+        animationType={game.animationType}
       />
     </div>
   )
