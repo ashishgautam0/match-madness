@@ -63,12 +63,12 @@ export const HAPTIC_CONFIG = {
  * @remarks Paths relative to /public directory
  */
 export const SOUND_PATHS = {
-  correct: '/sounds/correct.mp3',
+  correct: '/sounds/correct.wav',
   wrong: '/sounds/wrong.mp3',
-  complete: '/sounds/complete.mp3',
-  'streak-10': '/sounds/streak-10.mp3',
-  'streak-25': '/sounds/streak-25.mp3',
-  select: '/sounds/select.mp3',
+  complete: '/sounds/correct.wav', // Reuse correct sound for now
+  'streak-10': '/sounds/correct.wav', // Reuse correct sound for now
+  'streak-25': '/sounds/correct.wav', // Reuse correct sound for now
+  select: '/sounds/correct.wav', // Reuse correct sound for now
 } as const
 
 /**
