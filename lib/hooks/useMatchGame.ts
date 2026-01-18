@@ -43,16 +43,16 @@ export function useMatchGame(config: GameConfig) {
 
   // Handle selection
   const selectItem = useCallback((item: GameItem, column: ColumnType) => {
-    // Update selection in engine
-    const newSelection = engine.selectItem(item, column)
+    // Auto-pronounce French words IMMEDIATELY when clicked (before any state updates)
+    if (column === 'french') {
+      speak(item.french)
+    }
 
     // Haptic feedback for selection
     trigger('light')
 
-    // Auto-pronounce French words when selected
-    if (column === 'french') {
-      speak(item.french)
-    }
+    // Update selection in engine
+    const newSelection = engine.selectItem(item, column)
 
     // Check if selection is complete
     if (isSelectionComplete(newSelection)) {
