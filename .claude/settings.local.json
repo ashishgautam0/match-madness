@@ -26,7 +26,18 @@
       "Bash(vercel ls:*)",
       "Bash(vercel inspect:*)",
       "Bash(vercel --prod --yes:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" status)",
+      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" diff --stat)",
+      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" add data/function-words/articles.ts types/game.ts lib/utils/constants.ts lib/game-engine/MatchGameEngine.ts lib/hooks/useMatchGame.ts components/game/ProgressBar.tsx)",
+      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" commit -m \"$\\(cat <<''EOF''\nAdd complete French function words dataset with dual progress tracking\n\n- Expanded vocabulary from 12 to 297 French function words\n  - Added all essential categories: articles, pronouns \\(subject, object, reflexive, \n    stressed, demonstrative, possessive, relative, interrogative\\), prepositions, \n    conjunctions, adverbs, negation, indefinites, and presentatives\n  - Each word includes French text, English translation, and grammatical type\n\n- Extended grammatical type system\n  - Added ''Masculine Plural'', ''Feminine Plural'', ''Both Genders'', and ''Invariable''\n  - Now supports full range of French grammatical classifications\n\n- Implemented dual progress tracking\n  - Track unique words learned \\(0-297 vocabulary coverage\\)\n  - Track total matches completed \\(variable 4-10 repetitions per word\\)\n  - Added visual progress bars for both metrics\n\n- Updated game configuration for extended learning\n  - MIN_REPETITIONS: 4 \\(strong exposure to each word\\)\n  - MAX_REPETITIONS: 10 \\(variable repetition for reinforcement\\)\n  - TOTAL_MATCHES: 2970 \\(297 words × 10 max repetitions\\)\n  - Each word appears 4-10 times for effective learning\n\n- Fixed progress state management\n  - Made progress reactive in useMatchGame hook\n  - Progress updates correctly after each successful match\n  - Proper state synchronization between engine and UI\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" push origin master)",
+      "Bash(vercel --version:*)",
+      "Bash(vercel:*)",
+      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" add lib/utils/constants.ts)",
+      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" commit -m \"Fix TypeScript error: use literal value instead of expression with as const\")",
+      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" add lib/game-engine/MatchGameEngine.ts)",
+      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" commit -m \"Replace matched items in-place without shuffling columns\n\n- Changed completeMatch to use map\\(\\) instead of shuffle\\(\\)\n- Matched items now replaced in their exact positions\n- Other items remain stationary for better UX\n- Reduces visual confusion and improves game flow\")"
     ]
   }
 }

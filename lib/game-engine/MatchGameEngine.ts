@@ -52,24 +52,41 @@ export class MatchGameEngine {
 
   /**
    * Generates initial visible items for all three columns
+   * Ensures no duplicate words appear in the same batch
    */
   private generateInitialVisibleItems(): GameState['visibleItems'] {
     const count = this.config.itemsPerColumn
-    const sourceItems = this.pool.slice(this.currentIndex, this.currentIndex + count)
+    const uniqueItems: GameItem[] = []
+    const seenSourceIds = new Set<string>()
+
+    // Collect unique words for visible batch
+    while (uniqueItems.length < count && this.currentIndex < this.pool.length) {
+      const item = this.pool[this.currentIndex]
+      const sourceId = item.sourceId || item.id
+
+      if (!seenSourceIds.has(sourceId)) {
+        uniqueItems.push(item)
+        seenSourceIds.add(sourceId)
+        this.currentIndex++
+      } else {
+        // Skip this item, will use it later
+        this.currentIndex++
+      }
+    }
 
     // Create unique instances for each column to ensure independent selection
     return {
-      french: shuffle(sourceItems.map(item => ({
+      french: shuffle(uniqueItems.map(item => ({
         ...item,
         sourceId: item.sourceId || item.id, // Preserve sourceId
         instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       }))),
-      english: shuffle(sourceItems.map(item => ({
+      english: shuffle(uniqueItems.map(item => ({
         ...item,
         sourceId: item.sourceId || item.id, // Preserve sourceId
         instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       }))),
-      type: shuffle(sourceItems.map(item => ({
+      type: shuffle(uniqueItems.map(item => ({
         ...item,
         sourceId: item.sourceId || item.id, // Preserve sourceId
         instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -194,11 +211,37 @@ export class MatchGameEngine {
    * @param selection - The selection that was matched (contains instanceIds)
    */
   public completeMatch(selection: Selection): void {
-    // Get the next item from the pool (will be added to all three columns)
-    const newItem = this.getNextItems(1)[0]
+    // Get current visible sourceIds (excluding the matched item)
+    const matchedSourceId = selection.french!.sourceId || selection.french!.id
+    const visibleSourceIds = new Set<string>()
+
+    // Collect all visible sourceIds except the one being replaced
+    this.state.visibleItems.french.forEach(item => {
+      const sourceId = item.sourceId || item.id
+      if (sourceId !== matchedSourceId) {
+        visibleSourceIds.add(sourceId)
+      }
+    })
+
+    // Find next item that doesn't duplicate any visible word
+    let newItem: GameItem | undefined
+    const startIndex = this.currentIndex
+
+    while (this.currentIndex < this.pool.length) {
+      const candidate = this.pool[this.currentIndex]
+      const candidateSourceId = candidate.sourceId || candidate.id
+
+      if (!visibleSourceIds.has(candidateSourceId)) {
+        newItem = candidate
+        this.currentIndex++
+        break
+      }
+
+      this.currentIndex++
+    }
 
     if (!newItem) {
-      // No more items in pool, just remove matched items
+      // No suitable item found, just remove matched items
       this.state = {
         ...this.state,
         visibleItems: {
@@ -216,7 +259,7 @@ export class MatchGameEngine {
     const englishInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
     const typeInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
 
-    // Replace matched items with new items in the same position (no shuffle)
+    // Replace only the matched item in each column, keeping all others in place
     const newVisibleItems = {
       french: this.state.visibleItems.french.map(item =>
         item.instanceId === selection.french!.instanceId ? frenchInstance : item
