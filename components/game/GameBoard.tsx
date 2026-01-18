@@ -19,35 +19,63 @@ interface GameBoardProps {
     english: 'correct' | 'wrong' | null
     type: 'correct' | 'wrong' | null
   }
+  checkMode: boolean
+  onToggleCheckMode: () => void
 }
 
 /**
  * Main game board with three columns
  */
-export function GameBoard({ state, progress, onSelectItem, animatingSelection, animationType }: GameBoardProps) {
+export function GameBoard({
+  state,
+  progress,
+  onSelectItem,
+  animatingSelection,
+  animationType,
+  checkMode,
+  onToggleCheckMode
+}: GameBoardProps) {
   const { isEnabled, toggle } = usePronunciation()
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 p-4">
-      {/* Progress and pronunciation toggle */}
+      {/* Progress and toggle buttons */}
       <div className="flex items-center justify-between gap-4">
         <ProgressBar progress={progress} />
 
-        <button
-          onClick={toggle}
-          className={`
-            flex items-center gap-2 px-4 py-2 rounded-lg
-            font-medium text-sm transition-all
-            ${isEnabled
-              ? 'bg-primary text-white hover:bg-primary-dark'
-              : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
-            }
-          `}
-          title={isEnabled ? 'Pronunciation ON' : 'Pronunciation OFF'}
-        >
-          <span className="text-lg">{isEnabled ? '🔊' : '🔇'}</span>
-          <span className="hidden sm:inline">Pronunciation</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleCheckMode}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg
+              font-medium text-sm transition-all
+              ${checkMode
+                ? 'bg-primary text-white hover:bg-primary-dark'
+                : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
+              }
+            `}
+            title={checkMode ? 'Check Mode ON (Match any 2)' : 'Check Mode OFF (Match all 3)'}
+          >
+            <span className="text-lg">{checkMode ? '✓' : '✗'}</span>
+            <span className="hidden sm:inline">Check Mode</span>
+          </button>
+
+          <button
+            onClick={toggle}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg
+              font-medium text-sm transition-all
+              ${isEnabled
+                ? 'bg-primary text-white hover:bg-primary-dark'
+                : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
+              }
+            `}
+            title={isEnabled ? 'Pronunciation ON' : 'Pronunciation OFF'}
+          >
+            <span className="text-lg">{isEnabled ? '🔊' : '🔇'}</span>
+            <span className="hidden sm:inline">Pronunciation</span>
+          </button>
+        </div>
       </div>
 
       {/* Three columns */}

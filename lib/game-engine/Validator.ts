@@ -131,3 +131,71 @@ export function validatePartialMatches(selection: Selection): {
     anyMatch,
   }
 }
+
+/**
+ * Validates a pair of selections in Check Mode (2 items instead of 3)
+ * @param selection - Current user selection
+ * @returns Object indicating which items are correct or wrong
+ */
+export function validateCheckMode(selection: Selection): {
+  french: 'correct' | 'wrong' | null
+  english: 'correct' | 'wrong' | null
+  type: 'correct' | 'wrong' | null
+  hasMatch: boolean
+} {
+  const { french, english, type } = selection
+
+  // Count how many items are selected
+  const selectionCount = [french, english, type].filter(item => item !== null).length
+
+  // Need exactly 2 selections for check mode
+  if (selectionCount !== 2) {
+    return {
+      french: null,
+      english: null,
+      type: null,
+      hasMatch: false,
+    }
+  }
+
+  // Check French-English pair
+  if (french && english && !type) {
+    const match = french.english === english.english
+    return {
+      french: match ? 'correct' : 'wrong',
+      english: match ? 'correct' : 'wrong',
+      type: null,
+      hasMatch: match,
+    }
+  }
+
+  // Check French-Type pair
+  if (french && type && !english) {
+    const match = french.type === type.type
+    return {
+      french: match ? 'correct' : 'wrong',
+      english: null,
+      type: match ? 'correct' : 'wrong',
+      hasMatch: match,
+    }
+  }
+
+  // Check English-Type pair
+  if (english && type && !french) {
+    const match = english.type === type.type
+    return {
+      french: null,
+      english: match ? 'correct' : 'wrong',
+      type: match ? 'correct' : 'wrong',
+      hasMatch: match,
+    }
+  }
+
+  // Should not reach here
+  return {
+    french: null,
+    english: null,
+    type: null,
+    hasMatch: false,
+  }
+}

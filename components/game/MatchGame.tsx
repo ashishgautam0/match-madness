@@ -57,6 +57,8 @@ export function MatchGame({ config, onComplete }: MatchGameProps) {
         onSelectItem={game.selectItem}
         animatingSelection={game.animatingSelection}
         animationType={game.animationType}
+        checkMode={game.checkMode}
+        onToggleCheckMode={game.toggleCheckMode}
       />
     </div>
   )

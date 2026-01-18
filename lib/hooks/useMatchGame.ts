@@ -8,7 +8,7 @@ import { usePronunciation } from './usePronunciation'
 import type { GameConfig, GameState, GameItem, ColumnType, GameStats } from '@/types/game'
 import { isSelectionComplete } from '@/types/game'
 import { STREAK_MILESTONES } from '@/lib/utils/constants'
-import { validatePartialMatches } from '../game-engine/Validator'
+import { validatePartialMatches, validateCheckMode } from '../game-engine/Validator'
 
 /**
  * Main game hook - orchestrates game engine with React
@@ -41,6 +41,7 @@ export function useMatchGame(config: GameConfig) {
     english: 'correct' | 'wrong' | null
     type: 'correct' | 'wrong' | null
   }>({ french: null, english: null, type: null })
+  const [checkMode, setCheckMode] = useState(false)
 
   // Services
   const { play } = useSound()
@@ -60,7 +61,44 @@ export function useMatchGame(config: GameConfig) {
     // Update selection in engine
     const newSelection = engine.selectItem(item, column)
 
-    // Check if selection is complete
+    // In Check Mode, validate with 2 selections
+    if (checkMode) {
+      const checkResult = validateCheckMode(newSelection)
+
+      if (checkResult.french !== null || checkResult.english !== null || checkResult.type !== null) {
+        // We have 2 selections - show feedback
+        setTimeout(() => {
+          setAnimatingSelection({
+            french: newSelection.french,
+            english: newSelection.english,
+            type: newSelection.type,
+          })
+          setAnimationType({
+            french: checkResult.french,
+            english: checkResult.english,
+            type: checkResult.type,
+          })
+
+          // Play sound
+          play(checkResult.hasMatch ? 'correct' : 'wrong')
+          trigger(checkResult.hasMatch ? 'light' : 'error')
+
+          // Clear after animation
+          setTimeout(() => {
+            setAnimationType({ french: null, english: null, type: null })
+            setAnimatingSelection({ french: null, english: null, type: null })
+            engine.clearSelection()
+            setState(engine.getState())
+          }, 400)
+        }, 150)
+      } else {
+        // Just 1 selection, update state
+        setState(engine.getState())
+      }
+      return
+    }
+
+    // Normal mode - check if selection is complete (all 3)
     if (isSelectionComplete(newSelection)) {
       // Small delay for UX (let user see selection)
       setTimeout(() => {
@@ -143,12 +181,22 @@ export function useMatchGame(config: GameConfig) {
       // Just update state
       setState(engine.getState())
     }
-  }, [engine, play, trigger, speak])
+  }, [engine, play, trigger, speak, checkMode])
 
   // Clear selection
   const clearSelection = useCallback(() => {
     engine.clearSelection()
     setState(engine.getState())
+  }, [engine])
+
+  // Toggle check mode
+  const toggleCheckMode = useCallback(() => {
+    setCheckMode(prev => !prev)
+    // Clear any existing selection when switching modes
+    engine.clearSelection()
+    setState(engine.getState())
+    setAnimationType({ french: null, english: null, type: null })
+    setAnimatingSelection({ french: null, english: null, type: null })
   }, [engine])
 
   // Reset game
@@ -194,5 +242,7 @@ export function useMatchGame(config: GameConfig) {
     isComplete: state.isComplete,
     animatingSelection,
     animationType,
+    checkMode,
+    toggleCheckMode,
   }
 }
