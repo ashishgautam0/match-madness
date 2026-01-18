@@ -13,7 +13,7 @@ export const ITEMS_PER_COLUMN = 6 as const
  * @remarks With 297 words × 4-10 repetitions = variable length game
  * Each word appears 4-10 times for strong learning reinforcement
  */
-export const TOTAL_MATCHES = 297 * 10 as const // 2970 matches maximum (297 words × 10 repetitions)
+export const TOTAL_MATCHES = 2970 as const // 297 words × 10 repetitions
 
 /**
  * Minimum times an item must appear in a session
