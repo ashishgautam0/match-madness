@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(npm install:*)",
+      "Bash(where npm)",
+      "Bash(cmd /c npm install howler @capacitor/core @capacitor/cli @capacitor/haptics)",
+      "Bash(npm.cmd install:*)",
+      "Bash(node --version:*)",
+      "Bash(tree:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

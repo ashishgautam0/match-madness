@@ -1,0 +1,163 @@
+'use client'
+
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { MatchGameEngine } from '@/lib/game-engine/MatchGameEngine'
+import { useSound } from './useSound'
+import { useHaptics } from './useHaptics'
+import type { GameConfig, GameState, GameItem, ColumnType, GameStats } from '@/types/game'
+import { isSelectionComplete } from '@/types/game'
+import { STREAK_MILESTONES } from '@/lib/utils/constants'
+
+/**
+ * Main game hook - orchestrates game engine with React
+ * @param config - Game configuration
+ * @example
+ * const game = useMatchGame(config)
+ * game.selectItem(item, 'french')
+ */
+export function useMatchGame(config: GameConfig) {
+  // Initialize engine (only once)
+  const engineRef = useRef<MatchGameEngine | null>(null)
+  if (!engineRef.current) {
+    engineRef.current = new MatchGameEngine(config)
+  }
+  const engine = engineRef.current
+
+  // State
+  const [state, setState] = useState<GameState>(engine.getState())
+  const [wrongAttempts, setWrongAttempts] = useState(0)
+  const [startTime] = useState(Date.now())
+  const [endTime, setEndTime] = useState<number | null>(null)
+  const [showWrongAnimation, setShowWrongAnimation] = useState(false)
+  const [showCorrectAnimation, setShowCorrectAnimation] = useState(false)
+
+  // Services
+  const { play } = useSound()
+  const { trigger } = useHaptics()
+
+  // Handle selection
+  const selectItem = useCallback((item: GameItem, column: ColumnType) => {
+    // Update selection in engine
+    const newSelection = engine.selectItem(item, column)
+
+    // Play select sound
+    play('select', 0.3)
+    trigger('light')
+
+    // Check if selection is complete
+    if (isSelectionComplete(newSelection)) {
+      // Small delay for UX (let user see selection)
+      setTimeout(() => {
+        const result = engine.processSelection()
+
+        if (result.isValid) {
+          // Correct match!
+          play('correct')
+          trigger('medium')
+
+          // Check for streak milestones
+          if (STREAK_MILESTONES.includes(result.streak)) {
+            const milestoneIndex = STREAK_MILESTONES.indexOf(result.streak)
+            if (milestoneIndex === 0) play('streak-10')
+            else if (milestoneIndex === 1) play('streak-25')
+          }
+
+          // Check for completion
+          if (result.isComplete) {
+            play('complete')
+            trigger('heavy')
+            setEndTime(Date.now())
+          }
+
+          console.log('About to show green animation, current selection:', engine.getState().selection)
+
+          // Show green animation on selected items
+          setShowCorrectAnimation(true)
+
+          setTimeout(() => {
+            console.log('Green animation timeout, clearing selection')
+            setShowCorrectAnimation(false)
+            // Call completeMatch if it exists, otherwise just update state
+            if (typeof (engine as any).completeMatch === 'function') {
+              (engine as any).completeMatch(result.matchedId!)
+            }
+            // Update React state to show new items
+            setState(engine.getState())
+          }, 300) // Shorter duration for correct matches
+        } else {
+          // Wrong match - keep selection visible for animation
+          play('wrong')
+          trigger('error')
+          setWrongAttempts(prev => prev + 1)
+
+          // Update state to reset streak (but keep selection)
+          setState(engine.getState())
+
+          // Show red animation FIRST
+          setShowWrongAnimation(true)
+
+          // Delay clearing selection until after animation completes
+          setTimeout(() => {
+            setShowWrongAnimation(false)
+            // NOW manually clear the selection
+            engine.clearSelection()
+            setState(engine.getState())
+          }, 400) // Match shake animation duration
+        }
+      }, 150)
+    } else {
+      // Just update state
+      setState(engine.getState())
+    }
+  }, [engine, play, trigger])
+
+  // Clear selection
+  const clearSelection = useCallback(() => {
+    engine.clearSelection()
+    setState(engine.getState())
+  }, [engine])
+
+  // Reset game
+  const reset = useCallback(() => {
+    engine.reset()
+    setState(engine.getState())
+    setWrongAttempts(0)
+    setEndTime(null)
+  }, [engine])
+
+  // Get statistics
+  const getStats = useCallback((): GameStats => {
+    const progress = engine.getProgress()
+    const timeSpent = endTime
+      ? Math.floor((endTime - startTime) / 1000)
+      : Math.floor((Date.now() - startTime) / 1000)
+
+    const totalAttempts = progress.completed + wrongAttempts
+    const accuracy = totalAttempts > 0
+      ? (progress.completed / totalAttempts) * 100
+      : 0
+
+    return {
+      totalMatches: progress.total,
+      correctMatches: progress.completed,
+      wrongAttempts,
+      accuracy: Math.round(accuracy),
+      timeSpent,
+      averageTimePerMatch: progress.completed > 0
+        ? timeSpent / progress.completed
+        : 0,
+    }
+  }, [engine, wrongAttempts, startTime, endTime])
+
+  return {
+    state,
+    selectItem,
+    clearSelection,
+    reset,
+    progress: engine.getProgress(),
+    stats: getStats(),
+    isComplete: state.isComplete,
+    showWrongAnimation,
+    showCorrectAnimation,
+  }
+}
