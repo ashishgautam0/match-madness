@@ -91,3 +91,12 @@ export const BREAKPOINTS = {
   lg: 1024,
   xl: 1280,
 } as const
+
+/**
+ * Learning mode configuration
+ */
+export const LEARNING_MODE = {
+  BATCH_SIZE: 15,
+  MIN_REPETITIONS_PER_BATCH: 5,
+  MAX_REPETITIONS_PER_BATCH: 10,
+} as const

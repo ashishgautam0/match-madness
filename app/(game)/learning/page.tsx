@@ -1,0 +1,166 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { StudyTable } from '@/components/learning/StudyTable'
+import { MatchGame } from '@/components/game/MatchGame'
+import { functionWords } from '@/data/function-words/articles'
+import {
+  getBatch,
+  getTotalBatches,
+  getCurrentBatchIndex,
+  completeBatch,
+  loadProgress,
+} from '@/lib/batch/BatchManager'
+import { ITEMS_PER_COLUMN, LEARNING_MODE } from '@/lib/utils/constants'
+import type { GameConfig } from '@/types/game'
+import Link from 'next/link'
+
+type Phase = 'study' | 'test' | 'results'
+
+export default function LearningPage() {
+  const [currentBatchIndex, setCurrentBatchIndex] = useState(0)
+  const [phase, setPhase] = useState<Phase>('study')
+  const [gameKey, setGameKey] = useState(0) // Force remount game on batch change
+
+  const totalBatches = getTotalBatches(functionWords)
+  const currentBatch = getBatch(functionWords, currentBatchIndex)
+  const isLastBatch = currentBatchIndex >= totalBatches - 1
+
+  // Load progress on mount
+  useEffect(() => {
+    const progress = loadProgress()
+    setCurrentBatchIndex(progress.currentBatchIndex)
+  }, [])
+
+  // Game config for current batch
+  const gameConfig: GameConfig = {
+    items: currentBatch,
+    totalMatches: currentBatch.length * LEARNING_MODE.MAX_REPETITIONS_PER_BATCH,
+    itemsPerColumn: ITEMS_PER_COLUMN,
+    minRepetitions: LEARNING_MODE.MIN_REPETITIONS_PER_BATCH,
+    maxRepetitions: LEARNING_MODE.MAX_REPETITIONS_PER_BATCH,
+  }
+
+  const handleStartTest = () => {
+    setPhase('test')
+  }
+
+  const handleTestComplete = () => {
+    setPhase('results')
+  }
+
+  const handleNextBatch = () => {
+    completeBatch(currentBatchIndex)
+    const nextIndex = currentBatchIndex + 1
+
+    if (nextIndex < totalBatches) {
+      setCurrentBatchIndex(nextIndex)
+      setPhase('study')
+      setGameKey(prev => prev + 1) // Force new game instance
+    }
+  }
+
+  const handleRetryBatch = () => {
+    setPhase('study')
+    setGameKey(prev => prev + 1) // Force new game instance
+  }
+
+  return (
+    <main className="min-h-screen">
+      {/* Navigation */}
+      <div className="sticky top-0 z-50 bg-neutral-900/95 backdrop-blur border-b border-neutral-800 px-4 py-3">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
+          >
+            <span>←</span>
+            <span>Back to Modes</span>
+          </Link>
+
+          <div className="text-sm text-neutral-400">
+            Batch {currentBatchIndex + 1} of {totalBatches}
+          </div>
+        </div>
+      </div>
+
+      {/* Study Phase */}
+      {phase === 'study' && (
+        <div className="py-12 px-4">
+          <StudyTable
+            words={currentBatch}
+            batchNumber={currentBatchIndex + 1}
+            totalBatches={totalBatches}
+          />
+
+          <div className="mt-8 text-center">
+            <button
+              onClick={handleStartTest}
+              className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg text-lg transition-colors shadow-lg hover:shadow-xl"
+            >
+              Ready to Test! →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Test Phase */}
+      {phase === 'test' && (
+        <MatchGame
+          key={gameKey}
+          config={gameConfig}
+          onComplete={handleTestComplete}
+        />
+      )}
+
+      {/* Results Phase */}
+      {phase === 'results' && (
+        <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
+          <div className="max-w-md w-full space-y-6 text-center">
+            <div className="text-6xl">🎉</div>
+            <h2 className="text-3xl font-bold text-white">
+              Batch Complete!
+            </h2>
+            <p className="text-neutral-300 text-lg">
+              You've mastered {currentBatch.length} words from Batch {currentBatchIndex + 1}.
+            </p>
+
+            <div className="space-y-3 pt-4">
+              {!isLastBatch ? (
+                <>
+                  <button
+                    onClick={handleNextBatch}
+                    className="w-full px-6 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg transition-colors"
+                  >
+                    Next Batch ({currentBatch.length} new words) →
+                  </button>
+                  <button
+                    onClick={handleRetryBatch}
+                    className="w-full px-6 py-3 bg-neutral-700 hover:bg-neutral-600 text-white font-medium rounded-lg transition-colors"
+                  >
+                    Retry This Batch
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="text-xl font-bold text-primary">
+                    🏆 All Batches Complete!
+                  </div>
+                  <p className="text-neutral-400">
+                    You've learned all {functionWords.length} function words!
+                  </p>
+                  <Link
+                    href="/"
+                    className="block w-full px-6 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg transition-colors"
+                  >
+                    Back to Menu
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  )
+}

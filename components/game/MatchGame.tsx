@@ -8,12 +8,13 @@ import type { GameConfig } from '@/types/game'
 
 interface MatchGameProps {
   config: GameConfig
+  onComplete?: () => void
 }
 
 /**
  * Main game component - orchestrates entire game flow
  */
-export function MatchGame({ config }: MatchGameProps) {
+export function MatchGame({ config, onComplete }: MatchGameProps) {
   const [mounted, setMounted] = useState(false)
   const game = useMatchGame(config)
 
@@ -27,6 +28,13 @@ export function MatchGame({ config }: MatchGameProps) {
     console.log('Game progress:', game.progress)
   }, [game.progress])
 
+  // Call onComplete when game finishes
+  useEffect(() => {
+    if (game.isComplete && onComplete) {
+      onComplete()
+    }
+  }, [game.isComplete, onComplete])
+
   // Show loading state during SSR/initial hydration
   if (!mounted) {
     return (
@@ -36,7 +44,8 @@ export function MatchGame({ config }: MatchGameProps) {
     )
   }
 
-  if (game.isComplete) {
+  if (game.isComplete && !onComplete) {
+    // Only show completion screen if no onComplete callback (practice mode)
     return <CompletionScreen stats={game.stats} onPlayAgain={game.reset} />
   }
 
