@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { MatchGameEngine } from '@/lib/game-engine/MatchGameEngine'
 import { useSound } from './useSound'
 import { useHaptics } from './useHaptics'
+import { usePronunciation } from './usePronunciation'
 import type { GameConfig, GameState, GameItem, ColumnType, GameStats } from '@/types/game'
 import { isSelectionComplete } from '@/types/game'
 import { STREAK_MILESTONES } from '@/lib/utils/constants'
@@ -38,6 +39,7 @@ export function useMatchGame(config: GameConfig) {
   // Services
   const { play } = useSound()
   const { trigger } = useHaptics()
+  const { speak } = usePronunciation()
 
   // Handle selection
   const selectItem = useCallback((item: GameItem, column: ColumnType) => {
@@ -46,6 +48,11 @@ export function useMatchGame(config: GameConfig) {
 
     // Haptic feedback for selection
     trigger('light')
+
+    // Auto-pronounce French words when selected
+    if (column === 'french') {
+      speak(item.french)
+    }
 
     // Check if selection is complete
     if (isSelectionComplete(newSelection)) {
@@ -134,7 +141,7 @@ export function useMatchGame(config: GameConfig) {
       // Just update state
       setState(engine.getState())
     }
-  }, [engine, play, trigger])
+  }, [engine, play, trigger, speak])
 
   // Clear selection
   const clearSelection = useCallback(() => {

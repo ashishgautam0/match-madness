@@ -22,7 +22,11 @@
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth login)",
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" repo create match-madness --public --source=. --description=\"Learn French through engaging match-three gameplay - A Duolingo-style language learning game\" --push)",
       "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" repo set-default)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel inspect:*)",
+      "Bash(vercel --prod --yes:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }
