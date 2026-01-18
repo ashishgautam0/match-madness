@@ -58,9 +58,18 @@ export class MatchGameEngine {
 
     // Create unique instances for each column to ensure independent selection
     return {
-      french: shuffle(sourceItems.map(item => ({ ...item }))),
-      english: shuffle(sourceItems.map(item => ({ ...item }))),
-      type: shuffle(sourceItems.map(item => ({ ...item }))),
+      french: shuffle(sourceItems.map(item => ({
+        ...item,
+        instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      }))),
+      english: shuffle(sourceItems.map(item => ({
+        ...item,
+        instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      }))),
+      type: shuffle(sourceItems.map(item => ({
+        ...item,
+        instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      }))),
     }
   }
 
@@ -93,7 +102,10 @@ export class MatchGameEngine {
     const filtered = currentItems.filter(item => item.id !== removeId)
 
     // Get new items and create unique instances for this column
-    const newItems = this.getNextItems(1).map(item => ({ ...item }))
+    const newItems = this.getNextItems(1).map(item => ({
+      ...item,
+      instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    }))
 
     // Combine and shuffle
     return shuffle([...filtered, ...newItems])

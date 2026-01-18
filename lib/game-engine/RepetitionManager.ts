@@ -91,9 +91,12 @@ export function generatePool(
   items.forEach((item, index) => {
     const count = repetitions[index]
     for (let i = 0; i < count; i++) {
-      // Create a new object instance for each repetition
-      // This ensures each instance has a unique reference
-      pool.push({ ...item })
+      // Create a new object instance for each repetition with unique instanceId
+      // This ensures each card has a unique identifier
+      pool.push({
+        ...item,
+        instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      })
     }
   })
 
