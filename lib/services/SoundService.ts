@@ -24,24 +24,24 @@ class SoundService {
 
     const loadPromises = Object.entries(SOUND_PATHS).map(([type, path]) => {
       return new Promise<void>((resolve, reject) => {
-        // For now, use Web Audio API beeps as placeholders
-        // Real sound files can be added later
+        // Load real sound files from public/sounds/
         const sound = new Howl({
-          src: [this.generateBeep(type as SoundType)],
+          src: [path],
           volume: this.volume,
           preload: true,
           onload: () => {
+            console.log(`✓ Loaded sound: ${type} from ${path}`)
             this.sounds.set(type as SoundType, sound)
             resolve()
           },
           onloaderror: (_id, error) => {
-            console.warn(`Failed to load sound: ${type}`, error)
-            // Create silent fallback
-            const silent = new Howl({
-              src: [this.generateSilence()],
-              volume: 0,
+            console.warn(`Failed to load sound: ${type} from ${path}`, error)
+            // Fallback to beep sound if file not found
+            const beepSound = new Howl({
+              src: [this.generateBeep(type as SoundType)],
+              volume: this.volume,
             })
-            this.sounds.set(type as SoundType, silent)
+            this.sounds.set(type as SoundType, beepSound)
             resolve() // Don't reject - fail gracefully
           },
         })
