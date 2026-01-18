@@ -37,7 +37,9 @@
       "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" add lib/utils/constants.ts)",
       "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" commit -m \"Fix TypeScript error: use literal value instead of expression with as const\")",
       "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" add lib/game-engine/MatchGameEngine.ts)",
-      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" commit -m \"Replace matched items in-place without shuffling columns\n\n- Changed completeMatch to use map\\(\\) instead of shuffle\\(\\)\n- Matched items now replaced in their exact positions\n- Other items remain stationary for better UX\n- Reduces visual confusion and improves game flow\")"
+      "Bash(git -C \"c:\\\\Users\\\\5825\\\\Documents\\\\Programming\\\\frenchprogram\\\\match-madness\" commit -m \"Replace matched items in-place without shuffling columns\n\n- Changed completeMatch to use map\\(\\) instead of shuffle\\(\\)\n- Matched items now replaced in their exact positions\n- Other items remain stationary for better UX\n- Reduces visual confusion and improves game flow\")",
+      "Bash(timeout /t 5)",
+      "Bash(del nul)"
     ]
   }
 }

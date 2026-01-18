@@ -59,6 +59,7 @@ export function MatchGame({ config, onComplete }: MatchGameProps) {
         animationType={game.animationType}
         checkMode={game.checkMode}
         onToggleCheckMode={game.toggleCheckMode}
+        hiddenColumn={config.hiddenColumn}
       />
     </div>
   )

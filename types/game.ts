@@ -17,6 +17,12 @@ export type GrammaticalType =
 export type ColumnType = 'french' | 'english' | 'type'
 
 /**
+ * Column mode determines which columns are shown in the game
+ * @remarks Used in learning mode to reduce difficulty
+ */
+export type ColumnMode = 'two-columns' | 'three-columns'
+
+/**
  * Sound effect identifiers
  */
 export type SoundType =
@@ -86,6 +92,8 @@ export interface GameConfig {
   readonly itemsPerColumn: number
   readonly minRepetitions: number
   readonly maxRepetitions: number
+  readonly columnMode?: ColumnMode
+  readonly hiddenColumn?: 'type' | 'english' // Which column to hide in 2-column mode
 }
 
 /**

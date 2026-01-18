@@ -261,15 +261,16 @@ export class MatchGameEngine {
     const typeInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
 
     // Replace only the matched item in each column, keeping all others in place
+    // Handle 2-column mode where one selection might be null
     const newVisibleItems = {
       french: this.state.visibleItems.french.map(item =>
-        item.instanceId === selection.french!.instanceId ? frenchInstance : item
+        selection.french && item.instanceId === selection.french.instanceId ? frenchInstance : item
       ),
       english: this.state.visibleItems.english.map(item =>
-        item.instanceId === selection.english!.instanceId ? englishInstance : item
+        selection.english && item.instanceId === selection.english.instanceId ? englishInstance : item
       ),
       type: this.state.visibleItems.type.map(item =>
-        item.instanceId === selection.type!.instanceId ? typeInstance : item
+        selection.type && item.instanceId === selection.type.instanceId ? typeInstance : item
       ),
     }
 

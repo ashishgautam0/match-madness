@@ -16,12 +16,14 @@ import type { GameConfig } from '@/types/game'
 import Link from 'next/link'
 
 type Phase = 'study' | 'test' | 'results'
+type ColumnMode = 'french-english' | 'french-type' | 'all-three'
 
 export default function LearningPage() {
   const [currentBatchIndex, setCurrentBatchIndex] = useState(0)
   const [phase, setPhase] = useState<Phase>('study')
   const [gameKey, setGameKey] = useState(0) // Force remount game on batch change
   const [batchInput, setBatchInput] = useState('1')
+  const [columnMode, setColumnMode] = useState<ColumnMode>('french-english')
 
   const totalBatches = getTotalBatches(functionWords)
   const currentBatch = getBatch(functionWords, currentBatchIndex)
@@ -40,6 +42,8 @@ export default function LearningPage() {
     itemsPerColumn: ITEMS_PER_COLUMN,
     minRepetitions: LEARNING_MODE.MIN_REPETITIONS_PER_BATCH,
     maxRepetitions: LEARNING_MODE.MAX_REPETITIONS_PER_BATCH,
+    columnMode: columnMode === 'all-three' ? 'three-columns' : 'two-columns',
+    hiddenColumn: columnMode === 'french-english' ? 'type' : columnMode === 'french-type' ? 'english' : undefined,
   }
 
   const handleStartTest = () => {
@@ -155,6 +159,56 @@ export default function LearningPage() {
             batchNumber={currentBatchIndex + 1}
             totalBatches={totalBatches}
           />
+
+          {/* Column Mode Selector */}
+          <div className="mt-8 max-w-2xl mx-auto">
+            <h3 className="text-center text-lg font-semibold text-white mb-4">
+              Choose Matching Mode
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                onClick={() => setColumnMode('french-english')}
+                className={`
+                  p-4 rounded-lg border-2 transition-all text-left
+                  ${columnMode === 'french-english'
+                    ? 'border-primary bg-primary/10 text-white'
+                    : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600'
+                  }
+                `}
+              >
+                <div className="font-bold text-sm mb-1">French ↔ English</div>
+                <div className="text-xs text-neutral-400">Learn word meanings first (Easiest)</div>
+              </button>
+
+              <button
+                onClick={() => setColumnMode('french-type')}
+                className={`
+                  p-4 rounded-lg border-2 transition-all text-left
+                  ${columnMode === 'french-type'
+                    ? 'border-primary bg-primary/10 text-white'
+                    : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600'
+                  }
+                `}
+              >
+                <div className="font-bold text-sm mb-1">French ↔ Type</div>
+                <div className="text-xs text-neutral-400">Learn gender/number (Medium)</div>
+              </button>
+
+              <button
+                onClick={() => setColumnMode('all-three')}
+                className={`
+                  p-4 rounded-lg border-2 transition-all text-left
+                  ${columnMode === 'all-three'
+                    ? 'border-primary bg-primary/10 text-white'
+                    : 'border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600'
+                  }
+                `}
+              >
+                <div className="font-bold text-sm mb-1">All Three Columns</div>
+                <div className="text-xs text-neutral-400">Full challenge (Hardest)</div>
+              </button>
+            </div>
+          </div>
 
           <div className="mt-8 text-center">
             <button

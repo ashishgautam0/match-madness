@@ -25,6 +25,10 @@ export function useMatchGame(config: GameConfig) {
   }
   const engine = engineRef.current
 
+  // Detect 2-column mode
+  const isTwoColumnMode = config.columnMode === 'two-columns'
+  const hiddenColumn = config.hiddenColumn
+
   // State
   const [state, setState] = useState<GameState>(engine.getState())
   const [progress, setProgress] = useState(engine.getProgress())
@@ -61,7 +65,85 @@ export function useMatchGame(config: GameConfig) {
     // Update selection in engine
     const newSelection = engine.selectItem(item, column)
 
-    // In Check Mode, validate with 2 selections
+    // In 2-column mode, validate with 2 selections
+    if (isTwoColumnMode) {
+      const checkResult = validateCheckMode(newSelection)
+
+      if (checkResult.french !== null || checkResult.english !== null || checkResult.type !== null) {
+        // We have 2 selections - show feedback
+        setTimeout(() => {
+          setAnimatingSelection({
+            french: newSelection.french,
+            english: newSelection.english,
+            type: newSelection.type,
+          })
+          setAnimationType({
+            french: checkResult.french,
+            english: checkResult.english,
+            type: checkResult.type,
+          })
+
+          if (checkResult.hasMatch) {
+            // Correct match in 2-column mode - advance the game
+            const result = engine.processSelection()
+
+            play('correct')
+            trigger('medium')
+
+            // Check for streak milestones
+            if (STREAK_MILESTONES.includes(result.streak as 10 | 25 | 50 | 100)) {
+              const milestoneIndex = STREAK_MILESTONES.indexOf(result.streak as 10 | 25 | 50 | 100)
+              if (milestoneIndex === 0) play('streak-10')
+              else if (milestoneIndex === 1) play('streak-25')
+            }
+
+            // Check for completion
+            if (result.isComplete) {
+              play('complete')
+              trigger('heavy')
+              setEndTime(Date.now())
+            }
+
+            setTimeout(() => {
+              // Clear animation
+              setAnimationType({ french: null, english: null, type: null })
+              setAnimatingSelection({ french: null, english: null, type: null })
+
+              // Call completeMatch to refill columns and clear selection
+              const currentSelection = engine.getState().selection
+              if (typeof (engine as any).completeMatch === 'function') {
+                (engine as any).completeMatch(currentSelection)
+              }
+              // Update React state to show new items
+              setState(engine.getState())
+              setProgress(engine.getProgress())
+            }, 300)
+          } else {
+            // Wrong match in 2-column mode
+            play('wrong')
+            trigger('error')
+            setWrongAttempts(prev => prev + 1)
+
+            // Update state to reset streak (but keep selection)
+            setState(engine.getState())
+
+            // Clear after animation
+            setTimeout(() => {
+              setAnimationType({ french: null, english: null, type: null })
+              setAnimatingSelection({ french: null, english: null, type: null })
+              engine.clearSelection()
+              setState(engine.getState())
+            }, 400)
+          }
+        }, 150)
+      } else {
+        // Just 1 selection, update state
+        setState(engine.getState())
+      }
+      return
+    }
+
+    // In Check Mode, validate with 2 selections (practice mode, doesn't advance)
     if (checkMode) {
       const checkResult = validateCheckMode(newSelection)
 
@@ -98,7 +180,7 @@ export function useMatchGame(config: GameConfig) {
       return
     }
 
-    // Normal mode - check if selection is complete (all 3)
+    // Normal 3-column mode - check if selection is complete (all 3)
     if (isSelectionComplete(newSelection)) {
       // Small delay for UX (let user see selection)
       setTimeout(() => {

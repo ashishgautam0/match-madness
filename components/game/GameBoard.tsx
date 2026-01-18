@@ -21,6 +21,7 @@ interface GameBoardProps {
   }
   checkMode: boolean
   onToggleCheckMode: () => void
+  hiddenColumn?: 'type' | 'english'
 }
 
 /**
@@ -33,9 +34,13 @@ export function GameBoard({
   animatingSelection,
   animationType,
   checkMode,
-  onToggleCheckMode
+  onToggleCheckMode,
+  hiddenColumn
 }: GameBoardProps) {
   const { isEnabled, toggle } = usePronunciation()
+
+  // Determine grid columns based on mode
+  const gridCols = hiddenColumn ? 'grid-cols-2' : 'grid-cols-3'
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 p-4">
@@ -78,8 +83,8 @@ export function GameBoard({
         </div>
       </div>
 
-      {/* Three columns */}
-      <div className="grid grid-cols-3 gap-4 md:gap-6">
+      {/* Columns (2 or 3 depending on mode) */}
+      <div className={`grid ${gridCols} gap-4 md:gap-6`}>
         <GameColumn
           title="Français"
           items={state.visibleItems.french}
@@ -90,25 +95,29 @@ export function GameBoard({
           animationType={animationType.french}
         />
 
-        <GameColumn
-          title="English"
-          items={state.visibleItems.english}
-          column="english"
-          selectedItem={state.selection.english}
-          onSelectItem={onSelectItem}
-          animatingItem={animatingSelection.english}
-          animationType={animationType.english}
-        />
+        {hiddenColumn !== 'english' && (
+          <GameColumn
+            title="English"
+            items={state.visibleItems.english}
+            column="english"
+            selectedItem={state.selection.english}
+            onSelectItem={onSelectItem}
+            animatingItem={animatingSelection.english}
+            animationType={animationType.english}
+          />
+        )}
 
-        <GameColumn
-          title="Type"
-          items={state.visibleItems.type}
-          column="type"
-          selectedItem={state.selection.type}
-          onSelectItem={onSelectItem}
-          animatingItem={animatingSelection.type}
-          animationType={animationType.type}
-        />
+        {hiddenColumn !== 'type' && (
+          <GameColumn
+            title="Type"
+            items={state.visibleItems.type}
+            column="type"
+            selectedItem={state.selection.type}
+            onSelectItem={onSelectItem}
+            animatingItem={animatingSelection.type}
+            animationType={animationType.type}
+          />
+        )}
       </div>
     </div>
   )
