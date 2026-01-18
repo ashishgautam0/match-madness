@@ -92,8 +92,9 @@ export function useMatchGame(config: GameConfig) {
             setAnimatingSelection({ french: null, english: null, type: null })
 
             // Call completeMatch to refill columns and clear selection
+            // Pass the full selection so we can remove specific instances by instanceId
             if (typeof (engine as any).completeMatch === 'function') {
-              (engine as any).completeMatch(result.matchedId!)
+              (engine as any).completeMatch(currentSelection)
             }
             // Update React state to show new items
             setState(engine.getState())

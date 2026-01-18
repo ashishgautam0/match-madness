@@ -94,12 +94,13 @@ export class MatchGameEngine {
   /**
    * Refills a column after successful match
    * @param column - Column to refill
-   * @param removeId - ID of item to remove
+   * @param removeInstanceId - Instance ID of the specific item to remove
    * @returns New column items
    */
-  private refillColumn(column: ColumnType, removeId: string): readonly GameItem[] {
+  private refillColumn(column: ColumnType, removeInstanceId: string): readonly GameItem[] {
     const currentItems = this.state.visibleItems[column]
-    const filtered = currentItems.filter(item => item.id !== removeId)
+    // Remove only the specific instance that was matched
+    const filtered = currentItems.filter(item => item.instanceId !== removeInstanceId)
 
     // Get new items and create unique instances for this column
     const newItems = this.getNextItems(1).map(item => ({
@@ -181,14 +182,14 @@ export class MatchGameEngine {
 
   /**
    * Completes a successful match by refilling columns and clearing selection
-   * @param matchedId - ID of the matched item to remove
+   * @param selection - The selection that was matched (contains instanceIds)
    */
-  public completeMatch(matchedId: string): void {
-    // Refill all three columns
+  public completeMatch(selection: Selection): void {
+    // Refill all three columns, removing only the specific instances that were matched
     const newVisibleItems = {
-      french: this.refillColumn('french', matchedId),
-      english: this.refillColumn('english', matchedId),
-      type: this.refillColumn('type', matchedId),
+      french: this.refillColumn('french', selection.french!.instanceId!),
+      english: this.refillColumn('english', selection.english!.instanceId!),
+      type: this.refillColumn('type', selection.type!.instanceId!),
     }
 
     this.state = {
