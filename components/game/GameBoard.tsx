@@ -14,7 +14,11 @@ interface GameBoardProps {
     english: GameItem | null
     type: GameItem | null
   }
-  animationType: 'correct' | 'wrong' | null
+  animationType: {
+    french: 'correct' | 'wrong' | null
+    english: 'correct' | 'wrong' | null
+    type: 'correct' | 'wrong' | null
+  }
 }
 
 /**
@@ -55,7 +59,7 @@ export function GameBoard({ state, progress, onSelectItem, animatingSelection, a
           selectedItem={state.selection.french}
           onSelectItem={onSelectItem}
           animatingItem={animatingSelection.french}
-          animationType={animationType}
+          animationType={animationType.french}
         />
 
         <GameColumn
@@ -65,7 +69,7 @@ export function GameBoard({ state, progress, onSelectItem, animatingSelection, a
           selectedItem={state.selection.english}
           onSelectItem={onSelectItem}
           animatingItem={animatingSelection.english}
-          animationType={animationType}
+          animationType={animationType.english}
         />
 
         <GameColumn
@@ -75,7 +79,7 @@ export function GameBoard({ state, progress, onSelectItem, animatingSelection, a
           selectedItem={state.selection.type}
           onSelectItem={onSelectItem}
           animatingItem={animatingSelection.type}
-          animationType={animationType}
+          animationType={animationType.type}
         />
       </div>
     </div>

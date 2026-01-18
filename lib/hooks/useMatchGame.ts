@@ -8,6 +8,7 @@ import { usePronunciation } from './usePronunciation'
 import type { GameConfig, GameState, GameItem, ColumnType, GameStats } from '@/types/game'
 import { isSelectionComplete } from '@/types/game'
 import { STREAK_MILESTONES } from '@/lib/utils/constants'
+import { validatePartialMatches } from '../game-engine/Validator'
 
 /**
  * Main game hook - orchestrates game engine with React
@@ -35,7 +36,11 @@ export function useMatchGame(config: GameConfig) {
     english: GameItem | null
     type: GameItem | null
   }>({ french: null, english: null, type: null })
-  const [animationType, setAnimationType] = useState<'correct' | 'wrong' | null>(null)
+  const [animationType, setAnimationType] = useState<{
+    french: 'correct' | 'wrong' | null
+    english: 'correct' | 'wrong' | null
+    type: 'correct' | 'wrong' | null
+  }>({ french: null, english: null, type: null })
 
   // Services
   const { play } = useSound()
@@ -59,10 +64,30 @@ export function useMatchGame(config: GameConfig) {
     if (isSelectionComplete(newSelection)) {
       // Small delay for UX (let user see selection)
       setTimeout(() => {
+        // Check partial matches
+        const partialMatches = validatePartialMatches(newSelection)
         const result = engine.processSelection()
 
-        if (result.isValid) {
-          // Correct match!
+        // Capture the items that should animate BEFORE clearing
+        const currentSelection = engine.getState().selection
+
+        // Determine animation type for each column based on what matches
+        const columnAnimations = {
+          french: partialMatches.frenchEnglishMatch || partialMatches.frenchTypeMatch ? 'correct' as const : 'wrong' as const,
+          english: partialMatches.frenchEnglishMatch ? 'correct' as const : 'wrong' as const,
+          type: partialMatches.frenchTypeMatch ? 'correct' as const : 'wrong' as const,
+        }
+
+        // Store items for animation
+        setAnimatingSelection({
+          french: currentSelection.french,
+          english: currentSelection.english,
+          type: currentSelection.type,
+        })
+        setAnimationType(columnAnimations)
+
+        if (partialMatches.perfectMatch) {
+          // Perfect match!
           play('correct')
           trigger('medium')
 
@@ -80,49 +105,24 @@ export function useMatchGame(config: GameConfig) {
             setEndTime(Date.now())
           }
 
-          // Capture the items that should animate BEFORE clearing
-          const currentSelection = engine.getState().selection
-          console.log('About to show green animation, current selection:', currentSelection)
-
-          // Store items for animation and set animation type
-          setAnimatingSelection({
-            french: currentSelection.french,
-            english: currentSelection.english,
-            type: currentSelection.type,
-          })
-          setAnimationType('correct')
-
           setTimeout(() => {
-            console.log('Green animation timeout, clearing selection')
             // Clear animation
-            setAnimationType(null)
+            setAnimationType({ french: null, english: null, type: null })
             setAnimatingSelection({ french: null, english: null, type: null })
 
             // Call completeMatch to refill columns and clear selection
-            // Pass the full selection so we can remove specific instances by instanceId
             if (typeof (engine as any).completeMatch === 'function') {
               (engine as any).completeMatch(currentSelection)
             }
             // Update React state to show new items
             setState(engine.getState())
             setProgress(engine.getProgress())
-          }, 300) // Shorter duration for correct matches
+          }, 300)
         } else {
-          // Wrong match - capture items for animation
+          // Partial or no match - show feedback but don't advance
           play('wrong')
           trigger('error')
           setWrongAttempts(prev => prev + 1)
-
-          // Capture the items that should animate BEFORE clearing
-          const currentSelection = engine.getState().selection
-
-          // Store items for animation and set animation type
-          setAnimatingSelection({
-            french: currentSelection.french,
-            english: currentSelection.english,
-            type: currentSelection.type,
-          })
-          setAnimationType('wrong')
 
           // Update state to reset streak (but keep selection)
           setState(engine.getState())
@@ -130,13 +130,13 @@ export function useMatchGame(config: GameConfig) {
           // Delay clearing selection until after animation completes
           setTimeout(() => {
             // Clear animation
-            setAnimationType(null)
+            setAnimationType({ french: null, english: null, type: null })
             setAnimatingSelection({ french: null, english: null, type: null })
 
-            // NOW manually clear the selection
+            // Clear the selection
             engine.clearSelection()
             setState(engine.getState())
-          }, 400) // Match shake animation duration
+          }, 400)
         }
       }, 150)
     } else {

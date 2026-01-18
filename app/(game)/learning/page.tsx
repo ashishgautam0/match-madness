@@ -21,15 +21,16 @@ export default function LearningPage() {
   const [currentBatchIndex, setCurrentBatchIndex] = useState(0)
   const [phase, setPhase] = useState<Phase>('study')
   const [gameKey, setGameKey] = useState(0) // Force remount game on batch change
+  const [batchInput, setBatchInput] = useState('1')
 
   const totalBatches = getTotalBatches(functionWords)
   const currentBatch = getBatch(functionWords, currentBatchIndex)
   const isLastBatch = currentBatchIndex >= totalBatches - 1
 
-  // Load progress on mount
+  // Always start at batch 1 (index 0)
   useEffect(() => {
-    const progress = loadProgress()
-    setCurrentBatchIndex(progress.currentBatchIndex)
+    setCurrentBatchIndex(0)
+    setBatchInput('1')
   }, [])
 
   // Game config for current batch
@@ -55,6 +56,7 @@ export default function LearningPage() {
 
     if (nextIndex < totalBatches) {
       setCurrentBatchIndex(nextIndex)
+      setBatchInput(String(nextIndex + 1))
       setPhase('study')
       setGameKey(prev => prev + 1) // Force new game instance
     }
@@ -69,8 +71,27 @@ export default function LearningPage() {
     const prevIndex = currentBatchIndex - 1
     if (prevIndex >= 0) {
       setCurrentBatchIndex(prevIndex)
+      setBatchInput(String(prevIndex + 1))
       setPhase('study')
       setGameKey(prev => prev + 1) // Force new game instance
+    }
+  }
+
+  const handleBatchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setBatchInput(value)
+  }
+
+  const handleBatchInputSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const batchNumber = parseInt(batchInput, 10)
+    if (!isNaN(batchNumber) && batchNumber >= 1 && batchNumber <= totalBatches) {
+      setCurrentBatchIndex(batchNumber - 1)
+      setPhase('study')
+      setGameKey(prev => prev + 1)
+    } else {
+      // Reset to current batch if invalid
+      setBatchInput(String(currentBatchIndex + 1))
     }
   }
 
@@ -97,9 +118,22 @@ export default function LearningPage() {
               </button>
             )}
 
-            <div className="text-sm text-neutral-400">
-              Batch {currentBatchIndex + 1} of {totalBatches}
-            </div>
+            <form onSubmit={handleBatchInputSubmit} className="flex items-center gap-2">
+              <label htmlFor="batch-input" className="text-sm text-neutral-400">
+                Batch
+              </label>
+              <input
+                id="batch-input"
+                type="number"
+                min="1"
+                max={totalBatches}
+                value={batchInput}
+                onChange={handleBatchInputChange}
+                onBlur={handleBatchInputSubmit}
+                className="w-16 px-2 py-1 bg-neutral-800 border border-neutral-700 rounded text-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <span className="text-sm text-neutral-400">of {totalBatches}</span>
+            </form>
 
             {!isLastBatch && (
               <button

@@ -77,3 +77,57 @@ export function wouldCompleteMatch(
 export function getMatchedItemId(selection: Selection): string | null {
   return validateMatch(selection) ? selection.french!.id : null
 }
+
+/**
+ * Validates which pairs in the selection match
+ * @param selection - Current user selection
+ * @returns Object indicating which pairs match (french-english, french-type, english-type)
+ */
+export function validatePartialMatches(selection: Selection): {
+  frenchEnglishMatch: boolean
+  frenchTypeMatch: boolean
+  englishTypeMatch: boolean
+  perfectMatch: boolean
+  anyMatch: boolean
+} {
+  // Must have all three selections
+  if (!isSelectionComplete(selection)) {
+    return {
+      frenchEnglishMatch: false,
+      frenchTypeMatch: false,
+      englishTypeMatch: false,
+      perfectMatch: false,
+      anyMatch: false,
+    }
+  }
+
+  const { french, english, type } = selection as {
+    french: GameItem
+    english: GameItem
+    type: GameItem
+  }
+
+  // Check each pair
+  const frenchEnglishMatch = french.english === english.english
+  const frenchTypeMatch = french.type === type.type
+  // English and Type match if they both belong to the same source word
+  const englishTypeMatch = english.english === french.english && type.type === french.type
+
+  const perfectMatch = frenchEnglishMatch && frenchTypeMatch
+  const anyMatch = frenchEnglishMatch || frenchTypeMatch
+
+  console.log('🔍 PARTIAL MATCH VALIDATION:')
+  console.log('  French-English match:', frenchEnglishMatch)
+  console.log('  French-Type match:', frenchTypeMatch)
+  console.log('  English-Type match:', englishTypeMatch)
+  console.log('  Perfect match:', perfectMatch)
+  console.log('  Any match:', anyMatch)
+
+  return {
+    frenchEnglishMatch,
+    frenchTypeMatch,
+    englishTypeMatch,
+    perfectMatch,
+    anyMatch,
+  }
+}
