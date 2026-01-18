@@ -44,8 +44,7 @@ export function useMatchGame(config: GameConfig) {
     // Update selection in engine
     const newSelection = engine.selectItem(item, column)
 
-    // Play select sound
-    play('select', 0.3)
+    // Haptic feedback for selection
     trigger('light')
 
     // Check if selection is complete
