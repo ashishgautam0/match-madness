@@ -30,12 +30,9 @@ export function useSound() {
   }, [])
 
   const play = useCallback((type: SoundType, volume?: number) => {
-    if (!isPreloaded) {
-      console.warn('Sounds not preloaded yet')
-      return
-    }
+    // Try to play even if not fully preloaded - let the service handle it
     soundService.play(type, volume)
-  }, [isPreloaded])
+  }, [])
 
   const toggle = useCallback(() => {
     soundService.toggle()

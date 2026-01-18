@@ -132,10 +132,29 @@ class SoundService {
   public play(type: SoundType, volumeOverride?: number): void {
     if (!this.enabled) return
 
-    const sound = this.sounds.get(type)
+    let sound = this.sounds.get(type)
+
+    // If sound not loaded yet, try to load it on-demand
     if (!sound) {
-      console.warn(`Sound not loaded: ${type}`)
-      return
+      const path = SOUND_PATHS[type]
+      if (path) {
+        sound = new Howl({
+          src: [path],
+          volume: volumeOverride ?? this.volume,
+          preload: true,
+          onload: () => {
+            this.sounds.set(type, sound!)
+            sound!.play()
+          },
+          onloaderror: (_id, error) => {
+            console.warn(`Failed to load sound on-demand: ${type}`, error)
+          },
+        })
+        return // Will play in onload callback
+      } else {
+        console.warn(`Sound not loaded and no path found: ${type}`)
+        return
+      }
     }
 
     const volume = volumeOverride ?? this.volume
