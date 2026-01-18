@@ -27,11 +27,6 @@ export function GameItem({ item, column, isSelected, onClick, showWrongAnimation
     ? item.english
     : item.type
 
-  // Debug log
-  if (showCorrectAnimation) {
-    console.log(`GameItem ${displayText} showing green animation, isSelected:`, isSelected)
-  }
-
   return (
     <button
       onClick={handleClick}

@@ -24,8 +24,18 @@ export function validateMatch(selection: Selection): boolean {
     type: GameItem
   }
 
+  // Debug logging
+  console.log('🔍 VALIDATION CHECK:')
+  console.log('  French:', french.french, '| ID:', french.id, '| InstanceID:', french.instanceId)
+  console.log('  English:', english.english, '| ID:', english.id, '| InstanceID:', english.instanceId)
+  console.log('  Type:', type.type, '| ID:', type.id, '| InstanceID:', type.instanceId)
+
+  const isValid = french.id === english.id && english.id === type.id
+  console.log('  ✅ Match Result:', isValid ? 'VALID' : '❌ INVALID')
+  console.log('  ID Comparison:', `${french.id} === ${english.id} === ${type.id}`)
+
   // All three must have the same ID (they're the same item)
-  return french.id === english.id && english.id === type.id
+  return isValid
 }
 
 /**
