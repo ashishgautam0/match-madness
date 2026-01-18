@@ -216,20 +216,17 @@ export class MatchGameEngine {
     const englishInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
     const typeInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
 
-    // Remove matched items and add new item to each column, then shuffle
+    // Replace matched items with new items in the same position (no shuffle)
     const newVisibleItems = {
-      french: shuffle([
-        ...this.state.visibleItems.french.filter(item => item.instanceId !== selection.french!.instanceId!),
-        frenchInstance
-      ]),
-      english: shuffle([
-        ...this.state.visibleItems.english.filter(item => item.instanceId !== selection.english!.instanceId!),
-        englishInstance
-      ]),
-      type: shuffle([
-        ...this.state.visibleItems.type.filter(item => item.instanceId !== selection.type!.instanceId!),
-        typeInstance
-      ]),
+      french: this.state.visibleItems.french.map(item =>
+        item.instanceId === selection.french!.instanceId ? frenchInstance : item
+      ),
+      english: this.state.visibleItems.english.map(item =>
+        item.instanceId === selection.english!.instanceId ? englishInstance : item
+      ),
+      type: this.state.visibleItems.type.map(item =>
+        item.instanceId === selection.type!.instanceId ? typeInstance : item
+      ),
     }
 
     this.state = {
