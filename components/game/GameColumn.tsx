@@ -34,7 +34,7 @@ export function GameColumn({
 
       {/* Items */}
       <div className="flex flex-col gap-2 animate-slide-in">
-        {items.map((item, index) => {
+        {items.map((item) => {
           // Compare by instanceId to handle each unique card instance
           const isThisItemSelected = selectedItem?.instanceId === item.instanceId
           const isThisItemAnimating = animatingItem?.instanceId === item.instanceId
