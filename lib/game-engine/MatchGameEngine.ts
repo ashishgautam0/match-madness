@@ -185,11 +185,42 @@ export class MatchGameEngine {
    * @param selection - The selection that was matched (contains instanceIds)
    */
   public completeMatch(selection: Selection): void {
-    // Refill all three columns, removing only the specific instances that were matched
+    // Get the next item from the pool (will be added to all three columns)
+    const newItem = this.getNextItems(1)[0]
+
+    if (!newItem) {
+      // No more items in pool, just remove matched items
+      this.state = {
+        ...this.state,
+        visibleItems: {
+          french: this.state.visibleItems.french.filter(item => item.instanceId !== selection.french!.instanceId!),
+          english: this.state.visibleItems.english.filter(item => item.instanceId !== selection.english!.instanceId!),
+          type: this.state.visibleItems.type.filter(item => item.instanceId !== selection.type!.instanceId!),
+        },
+        selection: { french: null, english: null, type: null },
+      }
+      return
+    }
+
+    // Create unique instances for each column
+    const frenchInstance = { ...newItem, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
+    const englishInstance = { ...newItem, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
+    const typeInstance = { ...newItem, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
+
+    // Remove matched items and add new item to each column, then shuffle
     const newVisibleItems = {
-      french: this.refillColumn('french', selection.french!.instanceId!),
-      english: this.refillColumn('english', selection.english!.instanceId!),
-      type: this.refillColumn('type', selection.type!.instanceId!),
+      french: shuffle([
+        ...this.state.visibleItems.french.filter(item => item.instanceId !== selection.french!.instanceId!),
+        frenchInstance
+      ]),
+      english: shuffle([
+        ...this.state.visibleItems.english.filter(item => item.instanceId !== selection.english!.instanceId!),
+        englishInstance
+      ]),
+      type: shuffle([
+        ...this.state.visibleItems.type.filter(item => item.instanceId !== selection.type!.instanceId!),
+        typeInstance
+      ]),
     }
 
     this.state = {
