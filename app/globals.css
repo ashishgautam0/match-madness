@@ -1,6 +1,29 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #58CC02;
+  --color-primary-dark: #4CAE00;
+  --color-primary-light: #6FE012;
+
+  --color-error: #FF4B4B;
+  --color-error-dark: #E63535;
+  --color-error-light: #FF6B6B;
+
+  --color-success: #58CC02;
+  --color-success-dark: #4CAE00;
+  --color-success-light: #6FE012;
+
+  --color-neutral-50: #F7F7F7;
+  --color-neutral-100: #E3E3E3;
+  --color-neutral-200: #C8C8C8;
+  --color-neutral-300: #A4A4A4;
+  --color-neutral-400: #7E7E7E;
+  --color-neutral-500: #5E5E5E;
+  --color-neutral-600: #4A4A4A;
+  --color-neutral-700: #3D3D3D;
+  --color-neutral-800: #2A2A2A;
+  --color-neutral-900: #1A1A1A;
+}
 
 @layer utilities {
   .animate-slide-in {
