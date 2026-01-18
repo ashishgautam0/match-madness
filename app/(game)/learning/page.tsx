@@ -65,8 +65,17 @@ export default function LearningPage() {
     setGameKey(prev => prev + 1) // Force new game instance
   }
 
+  const handlePreviousBatch = () => {
+    const prevIndex = currentBatchIndex - 1
+    if (prevIndex >= 0) {
+      setCurrentBatchIndex(prevIndex)
+      setPhase('study')
+      setGameKey(prev => prev + 1) // Force new game instance
+    }
+  }
+
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-neutral-900">
       {/* Navigation */}
       <div className="sticky top-0 z-50 bg-neutral-900/95 backdrop-blur border-b border-neutral-800 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -78,8 +87,28 @@ export default function LearningPage() {
             <span>Back to Modes</span>
           </Link>
 
-          <div className="text-sm text-neutral-400">
-            Batch {currentBatchIndex + 1} of {totalBatches}
+          <div className="flex items-center gap-4">
+            {currentBatchIndex > 0 && (
+              <button
+                onClick={handlePreviousBatch}
+                className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                ← Previous
+              </button>
+            )}
+
+            <div className="text-sm text-neutral-400">
+              Batch {currentBatchIndex + 1} of {totalBatches}
+            </div>
+
+            {!isLastBatch && (
+              <button
+                onClick={handleNextBatch}
+                className="px-4 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                Next Batch →
+              </button>
+            )}
           </div>
         </div>
       </div>

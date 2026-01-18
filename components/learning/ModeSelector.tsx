@@ -8,7 +8,7 @@ import Link from 'next/link'
  */
 export function ModeSelector() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl space-y-8">
         {/* Title */}
         <div className="text-center space-y-2">
