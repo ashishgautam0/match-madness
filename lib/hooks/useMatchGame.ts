@@ -59,8 +59,8 @@ export function useMatchGame(config: GameConfig) {
           trigger('medium')
 
           // Check for streak milestones
-          if (STREAK_MILESTONES.includes(result.streak)) {
-            const milestoneIndex = STREAK_MILESTONES.indexOf(result.streak)
+          if (STREAK_MILESTONES.includes(result.streak as 10 | 25 | 50 | 100)) {
+            const milestoneIndex = STREAK_MILESTONES.indexOf(result.streak as 10 | 25 | 50 | 100)
             if (milestoneIndex === 0) play('streak-10')
             else if (milestoneIndex === 1) play('streak-25')
           }
