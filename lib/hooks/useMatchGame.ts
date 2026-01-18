@@ -26,6 +26,7 @@ export function useMatchGame(config: GameConfig) {
 
   // State
   const [state, setState] = useState<GameState>(engine.getState())
+  const [progress, setProgress] = useState(engine.getProgress())
   const [wrongAttempts, setWrongAttempts] = useState(0)
   const [startTime] = useState(Date.now())
   const [endTime, setEndTime] = useState<number | null>(null)
@@ -104,6 +105,7 @@ export function useMatchGame(config: GameConfig) {
             }
             // Update React state to show new items
             setState(engine.getState())
+            setProgress(engine.getProgress())
           }, 300) // Shorter duration for correct matches
         } else {
           // Wrong match - capture items for animation
@@ -153,6 +155,7 @@ export function useMatchGame(config: GameConfig) {
   const reset = useCallback(() => {
     engine.reset()
     setState(engine.getState())
+    setProgress(engine.getProgress())
     setWrongAttempts(0)
     setEndTime(null)
   }, [engine])
@@ -186,7 +189,7 @@ export function useMatchGame(config: GameConfig) {
     selectItem,
     clearSelection,
     reset,
-    progress: engine.getProgress(),
+    progress,
     stats: getStats(),
     isComplete: state.isComplete,
     animatingSelection,

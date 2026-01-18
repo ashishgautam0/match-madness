@@ -10,21 +10,22 @@ export const ITEMS_PER_COLUMN = 6 as const
 
 /**
  * Total number of matches required to complete a game session
- * @remarks With 12 words: max possible = 12 * MAX_REPETITIONS
- * Current: 12 words × 20 max = 240 possible matches
+ * @remarks With 297 words × 4-10 repetitions = variable length game
+ * Each word appears 4-10 times for strong learning reinforcement
  */
-export const TOTAL_MATCHES = 200 as const
+export const TOTAL_MATCHES = 297 * 10 as const // 2970 matches maximum (297 words × 10 repetitions)
 
 /**
  * Minimum times an item must appear in a session
+ * @remarks Set to 4 to ensure strong exposure to each word
  */
-export const MIN_REPETITIONS = 5 as const
+export const MIN_REPETITIONS = 4 as const
 
 /**
  * Maximum times an item can appear in a session
- * @remarks Increased to 20 to support 200 total matches with 12 words
+ * @remarks Set to 10 to allow variable repetition for challenging words
  */
-export const MAX_REPETITIONS = 20 as const
+export const MAX_REPETITIONS = 10 as const
 
 /**
  * Audio configuration

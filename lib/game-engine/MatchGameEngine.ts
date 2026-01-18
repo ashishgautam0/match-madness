@@ -23,6 +23,7 @@ export class MatchGameEngine {
   private currentIndex: number
   private state: GameState
   private readonly config: GameConfig
+  private readonly learnedWordIds: Set<string> = new Set()
 
   constructor(config: GameConfig) {
     this.config = config
@@ -169,6 +170,10 @@ export class MatchGameEngine {
 
     // Valid match - DON'T refill columns yet, let hook handle it for animation
     const matchedId = this.state.selection.french!.id
+    const sourceId = this.state.selection.french!.sourceId || matchedId
+
+    // Track this unique word as learned
+    this.learnedWordIds.add(sourceId)
 
     const newCompleted = this.state.completed + 1
     const newStreak = this.state.streak + 1
@@ -248,11 +253,17 @@ export class MatchGameEngine {
    * Gets game progress
    */
   public getProgress(): GameProgress {
+    const totalUniqueWords = this.config.items.length
+    const uniqueWordsLearned = this.learnedWordIds.size
+
     return {
       completed: this.state.completed,
       total: this.state.total,
       percentage: Math.round((this.state.completed / this.state.total) * 100),
       streak: this.state.streak,
+      uniqueWordsLearned,
+      totalUniqueWords,
+      uniqueWordsPercentage: Math.round((uniqueWordsLearned / totalUniqueWords) * 100),
     }
   }
 
@@ -268,6 +279,7 @@ export class MatchGameEngine {
    */
   public reset(): void {
     this.currentIndex = 0
+    this.learnedWordIds.clear()
     this.pool = generatePool(
       this.config.items,
       this.config.totalMatches,

@@ -5,8 +5,11 @@
 export type GrammaticalType =
   | 'Masculine Singular'
   | 'Feminine Singular'
+  | 'Masculine Plural'
+  | 'Feminine Plural'
   | 'Plural'
   | 'Both Genders'
+  | 'Invariable'
 
 /**
  * Column identifiers in the game board
@@ -93,6 +96,9 @@ export interface GameProgress {
   readonly total: number
   readonly percentage: number
   readonly streak: number
+  readonly uniqueWordsLearned: number
+  readonly totalUniqueWords: number
+  readonly uniqueWordsPercentage: number
 }
 
 /**
