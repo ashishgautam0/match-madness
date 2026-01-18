@@ -483,4 +483,374 @@ git push origin master              # Push to GitHub
 
 ---
 
+## Session Patterns & Problem-Solving Approaches
+
+### Debugging Strategy Used This Session
+1. **Visual Issues First:** When user reported "white on white", immediately checked Tailwind config
+2. **Root Cause Analysis:** Found neutral-800 was `#FFFFFF` instead of dark gray
+3. **Systematic Fix:** Updated entire neutral palette, not just one value
+4. **Verification:** Progress bars became visible after color fix
+
+### User Communication Patterns
+- User says "cant you make X" → They want immediate action, not questions
+- User sends screenshot → Visual confirmation is needed, issue is real
+- User says "commit to github" → Wants changes saved immediately
+- User provides specific requirements → Follow exactly, don't over-engineer
+- User says "yo" or casual language → Maintain professional but friendly tone
+
+### Iterative Problem Solving
+**Example from Progress Bars:**
+1. User: "i dont see any progress bar"
+2. Tried: Changed width classes
+3. User: "still nothing"
+4. Tried: Increased heights and minimums
+5. User: "see i dont see anything" (with screenshot)
+6. **Root Cause Found:** Colors were inverted
+7. Fixed: Updated Tailwind config
+8. Result: Bars became visible
+
+**Key Learning:** If first fix doesn't work, look deeper at fundamentals (colors, visibility, z-index)
+
+### Multi-Step Features
+When implementing complex features:
+1. **Plan in layers:** Validator → Hook → Component → UI
+2. **Start at data layer:** Change validation logic first
+3. **Propagate upward:** Update hooks, then components
+4. **Test incrementally:** User can test at each stage
+5. **Document changes:** Update knowledge base
+
+---
+
+## Critical File Relationships
+
+### Animation Flow (Atomized Matching)
+```
+User clicks 3 items
+  ↓
+useMatchGame.selectItem()
+  ↓
+validatePartialMatches() in Validator.ts
+  ↓
+Determines per-column animation types
+  ↓
+setAnimationType({ french: 'correct', english: 'wrong', type: 'correct' })
+  ↓
+GameBoard receives animationType prop
+  ↓
+GameColumn receives column-specific type (e.g., animationType.french)
+  ↓
+GameItem shows green/red animation
+```
+
+### Sound Loading Chain
+```
+Component mounts
+  ↓
+useSound() hook initializes
+  ↓
+useEffect() calls soundService.preload()
+  ↓
+Preload may fail (browser restrictions)
+  ↓
+User makes match
+  ↓
+play('correct') called
+  ↓
+soundService.play() checks if loaded
+  ↓
+If not loaded: Load on-demand with Howl
+  ↓
+Sound plays when ready
+```
+
+### Learning Mode Batch Flow
+```
+User visits /learning
+  ↓
+useEffect() sets currentBatchIndex = 0 (always batch 1)
+  ↓
+getBatch(functionWords, 0) returns words[0-14]
+  ↓
+StudyTable displays 15 words
+  ↓
+User clicks "Next" or types batch number
+  ↓
+handleNextBatch() or handleBatchInputSubmit()
+  ↓
+setCurrentBatchIndex() updates state
+  ↓
+getBatch() returns new slice
+  ↓
+Table updates with new words
+```
+
+---
+
+## TypeScript Type Patterns
+
+### Common Type Assertions Needed
+```typescript
+// Selection to complete selection
+const { french, english, type } = selection as {
+  french: GameItem
+  english: GameItem
+  type: GameItem
+}
+
+// Sound in Howl onload callback
+sound!.play()  // Non-null assertion needed
+
+// Event types
+React.ChangeEvent<HTMLInputElement>
+React.FormEvent
+```
+
+### Important Type Exports
+```typescript
+// From types/game.ts
+export type SoundType = 'correct' | 'wrong' | 'complete' | 'streak-10' | 'streak-25' | 'select'
+export type ColumnType = 'french' | 'english' | 'type'
+export type Phase = 'study' | 'test' | 'results'
+```
+
+---
+
+## Performance Optimizations Already In Place
+
+### React.memo Usage
+- `GameItem` component uses React.memo for performance
+- Prevents re-renders of non-changing cards
+- Critical with 18 cards (6 per column × 3 columns)
+
+### instanceId for React Keys
+- Each card gets unique `instanceId`
+- Prevents React key collisions
+- Format: `${column}-${item.instanceId}`
+
+### Callback Optimization
+```typescript
+// All event handlers use useCallback
+const handleClick = useCallback(() => {
+  // Handler logic
+}, [dependencies])
+```
+
+### Layout Shift Prevention
+```typescript
+// Streak counter reserves space even when hidden
+<div className="min-w-[90px]">
+  {streak > 0 ? (
+    <span>Streak: {streak} 🔥</span>
+  ) : (
+    <span className="invisible">Streak: 0 🔥</span>
+  )}
+</div>
+```
+
+---
+
+## Browser Compatibility Notes
+
+### Audio Autoplay
+- **Issue:** Browsers block autoplay until user interaction
+- **Solution:** On-demand loading in soundService.play()
+- **Effect:** First sound may load slower, subsequent sounds are cached
+
+### Web Speech API (Pronunciation)
+- **Browser Support:** Chrome, Edge, Safari (not Firefox)
+- **Fallback:** No error if unavailable, just no audio
+- **Used in:** usePronunciation hook
+
+### Haptic Feedback
+- **Device Support:** Mobile devices only
+- **Desktop:** Safely ignored (no error)
+- **API:** navigator.vibrate()
+
+---
+
+## Environment-Specific Behaviors
+
+### Windows Development (Current Setup)
+- **Line Endings:** CRLF (git converts LF → CRLF)
+- **Path Separators:** Backslashes in tool output
+- **Bash Commands:** Run through Git Bash
+
+### Production (Vercel)
+- **Build:** Runs `npm run build`
+- **Deploy:** Automatic on push to master
+- **Environment:** Linux (POSIX paths)
+
+---
+
+## Testing Patterns
+
+### Manual Testing Checklist (from this session)
+1. **Visual verification:** User sends screenshots
+2. **Audio testing:** Match words to hear sounds
+3. **Navigation testing:** Click Previous/Next buttons
+4. **Input testing:** Type batch numbers
+5. **Edge cases:** First match, last match, wrong answers
+
+### What User Tests
+- Progress bars show correctly
+- Sounds play on every match
+- Green/red animations on correct/wrong pairs
+- Study table fits in viewport
+- Batch navigation works smoothly
+
+---
+
+## Code Smells Fixed This Session
+
+### ❌ Before: Artificial Minimums
+```typescript
+width: `${Math.max(progress.percentage, 25)}%`  // Always at least 25%
+```
+**Problem:** Not truly proportional
+**User Feedback:** "make the green proportional"
+
+### ✅ After: True Proportions
+```typescript
+width: `${progress.percentage}%`  // Actual percentage
+```
+
+### ❌ Before: Blocking Preload Check
+```typescript
+if (!isPreloaded) {
+  console.warn('Not ready')
+  return  // Blocks sound
+}
+```
+**Problem:** Sounds don't play if preload incomplete
+
+### ✅ After: Attempt Always
+```typescript
+soundService.play(type)  // Let service handle loading
+```
+
+### ❌ Before: Progress from localStorage
+```typescript
+const progress = loadProgress()
+setCurrentBatchIndex(progress.currentBatchIndex)  // Could be batch 20
+```
+**Problem:** User confused why different words show
+
+### ✅ After: Always Start Fresh
+```typescript
+setCurrentBatchIndex(0)  // Always batch 1
+setBatchInput('1')
+```
+
+---
+
+## Undocumented Gotchas
+
+### Tailwind Purging
+- **Issue:** Unused classes get removed in production
+- **Solution:** Dynamic classes must be whitelisted or use full strings
+- **Example:** `text-${size}` won't work, use `text-sm` explicitly
+
+### React Strict Mode
+- **Effect:** Runs effects twice in development
+- **Impact:** Preload may run 2x (harmless)
+- **Production:** Runs once as expected
+
+### Howler.js Sound Overlap
+- **Behavior:** Same sound can play multiple times simultaneously
+- **Effect:** Clicking fast can layer sounds
+- **Solution:** Not needed (rapid clicking is rare)
+
+### Next.js Fast Refresh
+- **Triggers:** On file save
+- **Preserves:** Component state (usually)
+- **Resets:** If component interface changes
+
+---
+
+## Quick Diagnostic Commands
+
+### Check if sounds exist
+```bash
+ls public/sounds/
+```
+
+### Check Tailwind compilation
+```bash
+npm run build
+# Look for warnings about unknown classes
+```
+
+### Check git status quickly
+```bash
+git status -s  # Short format
+```
+
+### See recent changes
+```bash
+git diff HEAD~1  # Compare with previous commit
+```
+
+---
+
+## User's Preferred Solutions
+
+### When user says "make it tighter"
+- Reduce padding (`py-4` → `py-2`)
+- Reduce margins (`space-y-6` → `space-y-3`)
+- Reduce font sizes (`text-base` → `text-sm`)
+- Never remove content, just compress spacing
+
+### When user says "make it work"
+- Fix root cause, not symptoms
+- Test thoroughly before responding
+- Commit when confirmed working
+
+### When user says "can we make X do Y"
+- Usually means "please do X"
+- Not asking permission, requesting action
+- Implement directly unless truly ambiguous
+
+---
+
+## Maintenance Notes
+
+### When Adding New Words
+1. Add to `data/function-words/articles.ts`
+2. Follow id pattern: `'category-number'`
+3. Ensure unique ids
+4. Total batches updates automatically (297 words / 15 = 20 batches)
+
+### When Adding New Sounds
+1. Add file to `public/sounds/`
+2. Update `SOUND_PATHS` in constants
+3. Update `SoundType` in types/game.ts
+4. Service will load on-demand
+
+### When Changing Batch Size
+1. Update `LEARNING_MODE.BATCH_SIZE` in constants
+2. Total batches recalculates automatically
+3. No other changes needed
+
+---
+
+## Session Success Metrics
+
+### What Worked Well
+- ✅ Atomized matching implemented cleanly
+- ✅ Sound system now reliable
+- ✅ Learning mode navigation intuitive
+- ✅ All changes committed and deployed
+- ✅ Knowledge base created for future sessions
+
+### What User Valued Most
+1. Quick iteration on progress bar visibility
+2. Understanding problem before solving (colors, not bars)
+3. Implementing exact request (atomized matching)
+4. Clean git history with descriptive commits
+5. This knowledge base for continuity
+
+---
+
 **End of Knowledge Base**
+
+_This document should be read at the start of any new session to restore full context. Update it when significant changes or patterns emerge._
