@@ -1,12 +1,13 @@
 'use client'
 
-import type { GameItem, ColumnType } from '@/types/game'
+import { memo } from 'react'
+import type { GameItem as GameItemType, ColumnType } from '@/types/game'
 
 interface GameItemProps {
-  item: GameItem
+  item: GameItemType
   column: ColumnType
   isSelected: boolean
-  onClick: (item: GameItem, column: ColumnType) => void
+  onClick: (item: GameItemType, column: ColumnType) => void
   showWrongAnimation: boolean
   showCorrectAnimation: boolean
 }
@@ -14,8 +15,9 @@ interface GameItemProps {
 /**
  * Individual game item component
  * @remarks Displays French word, English, or Type based on column
+ * @remarks Memoized to prevent unnecessary re-renders
  */
-export function GameItem({ item, column, isSelected, onClick, showWrongAnimation, showCorrectAnimation }: GameItemProps) {
+function GameItemComponent({ item, column, isSelected, onClick, showWrongAnimation, showCorrectAnimation }: GameItemProps) {
   const handleClick = () => {
     onClick(item, column)
   }
@@ -65,3 +67,13 @@ export function GameItem({ item, column, isSelected, onClick, showWrongAnimation
     </button>
   )
 }
+
+export const GameItem = memo(GameItemComponent, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if these specific props change
+  return (
+    prevProps.item.instanceId === nextProps.item.instanceId &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.showWrongAnimation === nextProps.showWrongAnimation &&
+    prevProps.showCorrectAnimation === nextProps.showCorrectAnimation
+  )
+})

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { GameItem } from '@/types/game'
 import { usePronunciation } from '@/lib/hooks/usePronunciation'
 
@@ -10,83 +11,123 @@ interface StudyTableProps {
 }
 
 /**
- * Colorful table displaying words for study phase
- * @remarks Reusable atomic component for displaying vocabulary
+ * Professional table displaying vocabulary for study
+ * @remarks Clean, scannable design with hover interactions
  */
 export function StudyTable({ words, batchNumber, totalBatches }: StudyTableProps) {
   const { speak } = usePronunciation()
+  const [activeRow, setActiveRow] = useState<string | null>(null)
 
-  // Color palette for alternating rows
-  const rowColors = [
-    'bg-blue-500/10 hover:bg-blue-500/20',
-    'bg-purple-500/10 hover:bg-purple-500/20',
-    'bg-pink-500/10 hover:bg-pink-500/20',
-    'bg-green-500/10 hover:bg-green-500/20',
-    'bg-yellow-500/10 hover:bg-yellow-500/20',
-  ]
+  const handleRowClick = (word: GameItem) => {
+    setActiveRow(word.id)
+    speak(word.french)
+    setTimeout(() => setActiveRow(null), 400)
+  }
+
+  // Type colors for badges
+  const getTypeBadgeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      'article': 'bg-blue-500/15 text-blue-400',
+      'preposition': 'bg-purple-500/15 text-purple-400',
+      'conjunction': 'bg-pink-500/15 text-pink-400',
+      'pronoun': 'bg-green-500/15 text-green-400',
+      'adverb': 'bg-yellow-500/15 text-yellow-400',
+      'determiner': 'bg-indigo-500/15 text-indigo-400',
+    }
+    return colors[type.toLowerCase()] || 'bg-neutral-500/15 text-neutral-400'
+  }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4">
+    <div className="w-full max-w-4xl mx-auto px-4 space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800 border border-neutral-700">
+          <span className="text-xs font-medium text-neutral-300">Batch {batchNumber} of {totalBatches}</span>
+        </div>
         <h2 className="text-2xl font-bold text-white">
-          Batch {batchNumber} of {totalBatches}
+          Study Vocabulary
         </h2>
-        <p className="text-neutral-400">
-          Study these {words.length} words, then test yourself!
+        <p className="text-sm text-neutral-400">
+          Click any row to hear pronunciation
         </p>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-lg border border-neutral-700 bg-neutral-800">
+      <div className="overflow-hidden rounded-xl border border-neutral-700 bg-neutral-800/50">
         <table className="w-full">
-          <thead className="bg-neutral-700">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-200">
+          <thead>
+            <tr className="bg-neutral-800 border-b border-neutral-700">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider w-12">
                 #
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-200">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">
                 Français
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-200">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider">
                 English
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-neutral-200">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-400 uppercase tracking-wider w-32">
                 Type
               </th>
+              <th className="px-4 py-3 w-10"></th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-neutral-700/50">
             {words.map((word, index) => (
               <tr
                 key={word.id}
+                onClick={() => handleRowClick(word)}
                 className={`
-                  ${rowColors[index % rowColors.length]}
-                  transition-colors cursor-pointer
+                  cursor-pointer transition-all duration-150
+                  hover:bg-neutral-700/30
+                  ${activeRow === word.id ? 'bg-primary/10' : ''}
                 `}
-                onClick={() => speak(word.french)}
               >
-                <td className="px-4 py-3 text-sm text-neutral-400">
+                <td className="px-4 py-3.5 text-sm text-neutral-500 font-medium">
                   {index + 1}
                 </td>
-                <td className="px-4 py-3 text-base font-medium text-white">
-                  {word.french}
+                <td className="px-4 py-3.5">
+                  <span className={`
+                    text-base font-semibold transition-colors
+                    ${activeRow === word.id ? 'text-primary' : 'text-white'}
+                  `}>
+                    {word.french}
+                  </span>
                 </td>
-                <td className="px-4 py-3 text-base text-neutral-300">
+                <td className="px-4 py-3.5 text-base text-neutral-300">
                   {word.english}
                 </td>
-                <td className="px-4 py-3 text-sm text-neutral-400">
-                  {word.type}
+                <td className="px-4 py-3.5">
+                  <span className={`
+                    inline-flex px-2 py-1 rounded-md
+                    text-xs font-medium uppercase tracking-wide
+                    ${getTypeBadgeColor(word.type)}
+                  `}>
+                    {word.type}
+                  </span>
+                </td>
+                <td className="px-4 py-3.5">
+                  <svg
+                    className={`
+                      w-4 h-4 transition-colors
+                      ${activeRow === word.id ? 'text-primary' : 'text-neutral-600'}
+                    `}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                    />
+                  </svg>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
-
-      {/* Hint */}
-      <div className="text-center text-sm text-neutral-500">
-        💡 Click on any French word to hear pronunciation
       </div>
     </div>
   )

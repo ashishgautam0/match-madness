@@ -117,6 +117,7 @@ export class MatchGameEngine {
    * @param column - Column to refill
    * @param removeInstanceId - Instance ID of the specific item to remove
    * @returns New column items
+   * @deprecated This method shuffles items. Use completeMatch instead which maintains positions.
    */
   private refillColumn(column: ColumnType, removeInstanceId: string): readonly GameItem[] {
     const currentItems = this.state.visibleItems[column]
@@ -130,8 +131,8 @@ export class MatchGameEngine {
       instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     }))
 
-    // Combine and shuffle
-    return shuffle([...filtered, ...newItems])
+    // DON'T shuffle - maintain positions
+    return [...filtered, ...newItems]
   }
 
   /**
