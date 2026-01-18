@@ -15,7 +15,14 @@
       "Bash(timeout /t 5 /nobreak)",
       "Bash(if [ -f nul ])",
       "Bash(then rm nul)",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(curl:*)",
+      "Bash(gh:*)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" --version)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth login)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" repo create match-madness --public --source=. --description=\"Learn French through engaging match-three gameplay - A Duolingo-style language learning game\" --push)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" repo set-default)",
+      "Bash(git push)"
     ]
   }
 }

@@ -39,6 +39,7 @@ export type HapticType =
  */
 export interface GameItem {
   readonly id: string
+  readonly sourceId?: string // Tracks which original word this instance came from (for validation with duplicates)
   readonly instanceId?: string // Unique ID for this specific card instance (generated at runtime)
   readonly french: string
   readonly english: string

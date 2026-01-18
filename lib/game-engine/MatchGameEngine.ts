@@ -60,14 +60,17 @@ export class MatchGameEngine {
     return {
       french: shuffle(sourceItems.map(item => ({
         ...item,
+        sourceId: item.sourceId || item.id, // Preserve sourceId
         instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       }))),
       english: shuffle(sourceItems.map(item => ({
         ...item,
+        sourceId: item.sourceId || item.id, // Preserve sourceId
         instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       }))),
       type: shuffle(sourceItems.map(item => ({
         ...item,
+        sourceId: item.sourceId || item.id, // Preserve sourceId
         instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       }))),
     }
@@ -105,6 +108,7 @@ export class MatchGameEngine {
     // Get new items and create unique instances for this column
     const newItems = this.getNextItems(1).map(item => ({
       ...item,
+      sourceId: item.sourceId || item.id, // Preserve sourceId
       instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     }))
 
@@ -203,9 +207,9 @@ export class MatchGameEngine {
     }
 
     // Create unique instances for each column
-    const frenchInstance = { ...newItem, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
-    const englishInstance = { ...newItem, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
-    const typeInstance = { ...newItem, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
+    const frenchInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
+    const englishInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
+    const typeInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
 
     // Remove matched items and add new item to each column, then shuffle
     const newVisibleItems = {

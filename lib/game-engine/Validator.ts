@@ -26,15 +26,24 @@ export function validateMatch(selection: Selection): boolean {
 
   // Debug logging
   console.log('🔍 VALIDATION CHECK:')
-  console.log('  French:', french.french, '| ID:', french.id, '| InstanceID:', french.instanceId)
-  console.log('  English:', english.english, '| ID:', english.id, '| InstanceID:', english.instanceId)
-  console.log('  Type:', type.type, '| ID:', type.id, '| InstanceID:', type.instanceId)
+  console.log('  Selected French word:', french.french)
+  console.log('    - English translation:', french.english)
+  console.log('    - Grammatical type:', french.type)
+  console.log('  Selected English card:', english.english)
+  console.log('  Selected Type card:', type.type)
 
-  const isValid = french.id === english.id && english.id === type.id
+  // Check if the selected English matches the French word's translation
+  const englishMatches = french.english === english.english
+  console.log('  English matches?', englishMatches, `(${french.english} === ${english.english})`)
+
+  // Check if the selected Type matches the French word's type
+  const typeMatches = french.type === type.type
+  console.log('  Type matches?', typeMatches, `(${french.type} === ${type.type})`)
+
+  const isValid = englishMatches && typeMatches
   console.log('  ✅ Match Result:', isValid ? 'VALID' : '❌ INVALID')
-  console.log('  ID Comparison:', `${french.id} === ${english.id} === ${type.id}`)
 
-  // All three must have the same ID (they're the same item)
+  // Match is valid if the English and Type selections match the French word's properties
   return isValid
 }
 

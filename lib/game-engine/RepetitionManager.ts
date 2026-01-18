@@ -95,6 +95,7 @@ export function generatePool(
       // This ensures each card has a unique identifier
       pool.push({
         ...item,
+        sourceId: item.id, // Track which original word this came from
         instanceId: `${item.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       })
     }
