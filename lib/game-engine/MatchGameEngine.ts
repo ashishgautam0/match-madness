@@ -7,6 +7,7 @@ import type {
   GameProgress
 } from '@/types/game'
 import { generatePool } from './RepetitionManager'
+import { AdaptiveRepetitionManager } from './AdaptiveRepetitionManager'
 import { validateMatch, validateTwoColumnMatch } from './Validator'
 import { shuffle } from './Shuffler'
 
@@ -24,26 +25,35 @@ export class MatchGameEngine {
   private state: GameState
   private readonly config: GameConfig
   private readonly learnedWordIds: Set<string> = new Set()
+  private adaptiveManager: AdaptiveRepetitionManager | null = null
+  private useAdaptiveMode: boolean = false
 
-  constructor(config: GameConfig) {
+  constructor(config: GameConfig, useAdaptiveRepetition: boolean = true) {
     this.config = config
+    this.useAdaptiveMode = useAdaptiveRepetition
 
-    // Generate item pool with repetitions
-    this.pool = generatePool(
-      config.items,
-      config.totalMatches,
-      config.minRepetitions,
-      config.maxRepetitions
-    )
-
-    this.currentIndex = 0
+    if (useAdaptiveRepetition) {
+      // Use adaptive repetition system - no cap on matches
+      this.adaptiveManager = new AdaptiveRepetitionManager(config.items)
+      this.pool = []
+      this.currentIndex = 0
+    } else {
+      // Use old static system
+      this.pool = generatePool(
+        config.items,
+        config.totalMatches,
+        config.minRepetitions,
+        config.maxRepetitions
+      )
+      this.currentIndex = 0
+    }
 
     // Initialize state
     this.state = {
       visibleItems: this.generateInitialVisibleItems(),
       selection: { french: null, english: null, type: null },
       completed: 0,
-      total: config.totalMatches,
+      total: this.useAdaptiveMode ? 150 : config.totalMatches, // Start at 150 in adaptive mode
       streak: 0,
       isProcessing: false,
       isComplete: false,
@@ -59,18 +69,32 @@ export class MatchGameEngine {
     const uniqueItems: GameItem[] = []
     const seenSourceIds = new Set<string>()
 
-    // Collect unique words for visible batch
-    while (uniqueItems.length < count && this.currentIndex < this.pool.length) {
-      const item = this.pool[this.currentIndex]
-      const sourceId = item.sourceId || item.id
+    if (this.useAdaptiveMode && this.adaptiveManager) {
+      // Use adaptive manager
+      while (uniqueItems.length < count) {
+        const item = this.adaptiveManager.getNextItem()
+        if (!item) break
 
-      if (!seenSourceIds.has(sourceId)) {
-        uniqueItems.push(item)
-        seenSourceIds.add(sourceId)
-        this.currentIndex++
-      } else {
-        // Skip this item, will use it later
-        this.currentIndex++
+        const sourceId = item.sourceId || item.id
+        if (!seenSourceIds.has(sourceId)) {
+          uniqueItems.push(item)
+          seenSourceIds.add(sourceId)
+        }
+      }
+    } else {
+      // Use static pool
+      while (uniqueItems.length < count && this.currentIndex < this.pool.length) {
+        const item = this.pool[this.currentIndex]
+        const sourceId = item.sourceId || item.id
+
+        if (!seenSourceIds.has(sourceId)) {
+          uniqueItems.push(item)
+          seenSourceIds.add(sourceId)
+          this.currentIndex++
+        } else {
+          // Skip this item, will use it later
+          this.currentIndex++
+        }
       }
     }
 
@@ -100,15 +124,17 @@ export class MatchGameEngine {
    * @returns Array of items
    */
   private getNextItems(count: number): GameItem[] {
-    const items: GameItem[] = []
+    if (this.useAdaptiveMode && this.adaptiveManager) {
+      return this.adaptiveManager.getNextItems(count)
+    }
 
+    const items: GameItem[] = []
     for (let i = 0; i < count; i++) {
       if (this.currentIndex < this.pool.length) {
         items.push(this.pool[this.currentIndex])
         this.currentIndex++
       }
     }
-
     return items
   }
 
@@ -179,12 +205,28 @@ export class MatchGameEngine {
       ? validateTwoColumnMatch(this.state.selection)
       : validateMatch(this.state.selection)
 
+    const sourceId = this.state.selection.french!.sourceId || this.state.selection.french!.id
+
     if (!isValid) {
-      // DON'T clear selection here - let the hook handle it for animation
-      // Just reset streak
-      this.state = {
-        ...this.state,
-        streak: 0,
+      // Record mistake in adaptive system
+      if (this.useAdaptiveMode && this.adaptiveManager) {
+        this.adaptiveManager.recordMistake(sourceId)
+        const newTotal = this.state.total + 5
+        console.log('❌ Mistake recorded for:', sourceId, '- will appear 5x more')
+        console.log('   Total before:', this.state.total, '→ after:', newTotal)
+
+        // Increase total matches by 5 (since we added 5 more copies)
+        this.state = {
+          ...this.state,
+          total: newTotal,
+          streak: 0,
+        }
+      } else {
+        // Just reset streak in non-adaptive mode
+        this.state = {
+          ...this.state,
+          streak: 0,
+        }
       }
 
       return { isValid: false, isComplete: false, streak: 0 }
@@ -192,14 +234,19 @@ export class MatchGameEngine {
 
     // Valid match - DON'T refill columns yet, let hook handle it for animation
     const matchedId = this.state.selection.french!.id
-    const sourceId = this.state.selection.french!.sourceId || matchedId
+
+    // Record correct match in adaptive system
+    if (this.useAdaptiveMode && this.adaptiveManager) {
+      this.adaptiveManager.recordCorrect(sourceId)
+      console.log('✅ Correct match for:', sourceId)
+    }
 
     // Track this unique word as learned
     this.learnedWordIds.add(sourceId)
 
     const newCompleted = this.state.completed + 1
     const newStreak = this.state.streak + 1
-    const isComplete = newCompleted >= this.state.total
+    const isComplete = this.useAdaptiveMode ? false : (newCompleted >= this.state.total) // Never complete in adaptive mode
 
     this.state = {
       ...this.state,
@@ -230,24 +277,42 @@ export class MatchGameEngine {
 
     // Find next item that doesn't duplicate any visible word
     let newItem: GameItem | undefined
-    const startIndex = this.currentIndex
 
-    while (this.currentIndex < this.pool.length) {
-      const candidate = this.pool[this.currentIndex]
-      const candidateSourceId = candidate.sourceId || candidate.id
+    if (this.useAdaptiveMode && this.adaptiveManager) {
+      // Use adaptive manager to get next item
+      let attempts = 0
+      const maxAttempts = 100
+      while (attempts < maxAttempts) {
+        const candidate = this.adaptiveManager.getNextItem()
+        if (!candidate) break
 
-      if (!visibleSourceIds.has(candidateSourceId)) {
-        newItem = candidate
-        this.currentIndex++
-        break
+        const candidateSourceId = candidate.sourceId || candidate.id
+        if (!visibleSourceIds.has(candidateSourceId)) {
+          newItem = candidate
+          break
+        }
+        attempts++
       }
+    } else {
+      // Use static pool
+      while (this.currentIndex < this.pool.length) {
+        const candidate = this.pool[this.currentIndex]
+        const candidateSourceId = candidate.sourceId || candidate.id
 
-      this.currentIndex++
+        if (!visibleSourceIds.has(candidateSourceId)) {
+          newItem = candidate
+          this.currentIndex++
+          break
+        }
+
+        this.currentIndex++
+      }
     }
 
     if (!newItem) {
       // No suitable item found, just remove matched items
       // Handle 2-column mode where one selection might be null
+      console.warn('⚠️ No new item available - removing matched items without replacement')
       this.state = {
         ...this.state,
         visibleItems: {
