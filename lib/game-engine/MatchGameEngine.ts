@@ -247,12 +247,19 @@ export class MatchGameEngine {
 
     if (!newItem) {
       // No suitable item found, just remove matched items
+      // Handle 2-column mode where one selection might be null
       this.state = {
         ...this.state,
         visibleItems: {
-          french: this.state.visibleItems.french.filter(item => item.instanceId !== selection.french!.instanceId!),
-          english: this.state.visibleItems.english.filter(item => item.instanceId !== selection.english!.instanceId!),
-          type: this.state.visibleItems.type.filter(item => item.instanceId !== selection.type!.instanceId!),
+          french: this.state.visibleItems.french.filter(item =>
+            !selection.french || item.instanceId !== selection.french.instanceId
+          ),
+          english: this.state.visibleItems.english.filter(item =>
+            !selection.english || item.instanceId !== selection.english.instanceId
+          ),
+          type: this.state.visibleItems.type.filter(item =>
+            !selection.type || item.instanceId !== selection.type.instanceId
+          ),
         },
         selection: { french: null, english: null, type: null },
       }
