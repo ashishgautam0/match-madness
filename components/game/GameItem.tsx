@@ -29,40 +29,118 @@ function GameItemComponent({ item, column, isSelected, onClick, showWrongAnimati
     ? item.english
     : item.type
 
+  // Base button styles
+  const getButtonStyle = () => {
+    let backgroundColor = '#1a1f2e'
+    let borderColor = '#2a3441'
+    let boxShadow = '0 2px 4px rgba(0,0,0,0.3)'
+
+    if (showWrongAnimation) {
+      backgroundColor = 'rgba(239, 68, 68, 0.15)'
+      borderColor = '#ef4444'
+      boxShadow = '0 0 12px rgba(239, 68, 68, 0.4)'
+    } else if (showCorrectAnimation) {
+      backgroundColor = 'rgba(88, 204, 2, 0.15)'
+      borderColor = '#58cc02'
+      boxShadow = '0 0 12px rgba(88, 204, 2, 0.4)'
+    } else if (isSelected) {
+      backgroundColor = 'rgba(28, 176, 246, 0.15)'
+      borderColor = '#1cb0f6'
+      boxShadow = '0 0 12px rgba(28, 176, 246, 0.3)'
+    }
+
+    return {
+      flex: 1,
+      position: 'relative' as const,
+      backgroundColor,
+      border: `2px solid ${borderColor}`,
+      borderRadius: '12px',
+      color: '#ffffff',
+      fontSize: '14px',
+      fontWeight: '600',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 0,
+      cursor: 'pointer',
+      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+      boxShadow,
+      padding: '0 8px'
+    }
+  }
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!showWrongAnimation && !showCorrectAnimation) {
+      e.currentTarget.style.backgroundColor = isSelected ? 'rgba(28, 176, 246, 0.25)' : '#242b3d'
+      e.currentTarget.style.borderColor = isSelected ? '#1cb0f6' : '#3a4558'
+      e.currentTarget.style.transform = 'translateY(-2px)'
+      e.currentTarget.style.boxShadow = isSelected ? '0 4px 16px rgba(28, 176, 246, 0.4)' : '0 4px 12px rgba(0,0,0,0.4)'
+    }
+  }
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!showWrongAnimation && !showCorrectAnimation) {
+      e.currentTarget.style.backgroundColor = isSelected ? 'rgba(28, 176, 246, 0.15)' : '#1a1f2e'
+      e.currentTarget.style.borderColor = isSelected ? '#1cb0f6' : '#2a3441'
+      e.currentTarget.style.transform = 'translateY(0)'
+      e.currentTarget.style.boxShadow = isSelected ? '0 0 12px rgba(28, 176, 246, 0.3)' : '0 2px 4px rgba(0,0,0,0.3)'
+    }
+  }
+
   return (
     <button
       onClick={handleClick}
-      className={`
-        relative w-full px-4 py-3 rounded-lg
-        bg-neutral-800 shadow-sm
-        border-2 transition-all duration-200
-        hover:shadow-md hover:-translate-y-0.5
-        active:translate-y-0
-        ${showWrongAnimation
-          ? 'border-error bg-error/20 shadow-md shadow-error/20 animate-shake'
-          : showCorrectAnimation
-          ? 'border-success bg-success/20 shadow-md shadow-success/20'
-          : isSelected
-          ? 'border-primary bg-primary/20 shadow-md shadow-primary/20'
-          : 'border-neutral-700 hover:border-primary/50'
-        }
-        font-medium text-sm md:text-base text-white
-        ${column === 'type' ? 'text-xs md:text-sm' : ''}
-      `}
+      style={getButtonStyle()}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       aria-pressed={isSelected}
       aria-label={`Select ${displayText}`}
     >
-      <span className="block truncate">{displayText}</span>
+      <span style={{
+        display: 'block',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+      }}>
+        {displayText}
+      </span>
 
       {/* Selection indicator */}
       {isSelected && !showWrongAnimation && !showCorrectAnimation && (
-        <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary animate-pop" />
+        <div style={{
+          position: 'absolute',
+          top: '6px',
+          right: '6px',
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          backgroundColor: '#1cb0f6',
+          boxShadow: '0 0 6px rgba(28, 176, 246, 0.6)'
+        }} />
       )}
       {showWrongAnimation && (
-        <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-error animate-pop" />
+        <div style={{
+          position: 'absolute',
+          top: '6px',
+          right: '6px',
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          backgroundColor: '#ef4444',
+          boxShadow: '0 0 6px rgba(239, 68, 68, 0.6)'
+        }} />
       )}
       {showCorrectAnimation && (
-        <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-success animate-pop" />
+        <div style={{
+          position: 'absolute',
+          top: '6px',
+          right: '6px',
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          backgroundColor: '#58cc02',
+          boxShadow: '0 0 6px rgba(88, 204, 2, 0.6)'
+        }} />
       )}
     </button>
   )

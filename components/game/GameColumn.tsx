@@ -26,16 +26,36 @@ export function GameColumn({
   animationType,
 }: GameColumnProps) {
   return (
-    <div className="flex flex-col gap-2">
+    <div style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+      minHeight: 0
+    }}>
       {/* Column header */}
-      <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wide px-2">
+      <div style={{
+        color: '#8b92a7',
+        fontSize: '10px',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '1px',
+        paddingLeft: '4px',
+        marginBottom: '8px',
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+      }}>
         {title}
-      </h3>
+      </div>
 
-      {/* Items */}
-      <div className="flex flex-col gap-2 animate-slide-in">
+      {/* Items container - uses remaining space */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        minHeight: 0
+      }}>
         {items.map((item) => {
-          // Compare by instanceId to handle each unique card instance
           const isThisItemSelected = selectedItem?.instanceId === item.instanceId
           const isThisItemAnimating = animatingItem?.instanceId === item.instanceId
 

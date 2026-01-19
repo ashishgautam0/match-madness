@@ -39,52 +39,87 @@ export function GameBoard({
 }: GameBoardProps) {
   const { isEnabled, toggle } = usePronunciation()
 
-  // Determine grid columns based on mode
-  const gridCols = hiddenColumn ? 'grid-cols-2' : 'grid-cols-3'
-
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 p-4">
+    <div style={{
+      height: '100%',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '12px',
+      gap: '12px'
+    }}>
       {/* Progress and toggle buttons */}
-      <div className="flex items-center justify-between gap-4">
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '8px',
+        flexShrink: 0
+      }}>
         <ProgressBar progress={progress} />
 
-        <div className="flex items-center gap-2">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
           <button
             onClick={onToggleCheckMode}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-lg
-              font-medium text-sm transition-all
-              ${checkMode
-                ? 'bg-primary text-white hover:bg-primary-dark'
-                : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
-              }
-            `}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '6px 11px',
+              borderRadius: '8px',
+              fontWeight: '600',
+              fontSize: '11px',
+              transition: 'all 0.2s ease',
+              backgroundColor: checkMode ? '#1cb0f6' : '#1a1f2e',
+              color: checkMode ? '#ffffff' : '#8b92a7',
+              border: checkMode ? '2px solid #1cb0f6' : '2px solid #2a3441',
+              cursor: 'pointer',
+              boxShadow: checkMode ? '0 0 12px rgba(28, 176, 246, 0.3)' : '0 2px 4px rgba(0,0,0,0.3)'
+            }}
             title={checkMode ? 'Check Mode ON (Match any 2)' : 'Check Mode OFF (Match all 3)'}
           >
-            <span className="text-lg">{checkMode ? '✓' : '✗'}</span>
+            <span style={{ fontSize: '13px' }}>{checkMode ? '✓' : '✗'}</span>
             <span className="hidden sm:inline">Check Mode</span>
           </button>
 
           <button
             onClick={toggle}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-lg
-              font-medium text-sm transition-all
-              ${isEnabled
-                ? 'bg-primary text-white hover:bg-primary-dark'
-                : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
-              }
-            `}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '6px 11px',
+              borderRadius: '8px',
+              fontWeight: '600',
+              fontSize: '11px',
+              transition: 'all 0.2s ease',
+              backgroundColor: isEnabled ? '#1cb0f6' : '#1a1f2e',
+              color: isEnabled ? '#ffffff' : '#8b92a7',
+              border: isEnabled ? '2px solid #1cb0f6' : '2px solid #2a3441',
+              cursor: 'pointer',
+              boxShadow: isEnabled ? '0 0 12px rgba(28, 176, 246, 0.3)' : '0 2px 4px rgba(0,0,0,0.3)'
+            }}
             title={isEnabled ? 'Pronunciation ON' : 'Pronunciation OFF'}
           >
-            <span className="text-lg">{isEnabled ? '🔊' : '🔇'}</span>
+            <span style={{ fontSize: '13px' }}>{isEnabled ? '🔊' : '🔇'}</span>
             <span className="hidden sm:inline">Pronunciation</span>
           </button>
         </div>
       </div>
 
       {/* Columns (2 or 3 depending on mode) */}
-      <div className={`grid ${gridCols} gap-4 md:gap-6`}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: hiddenColumn ? '1fr 1fr' : '1fr 1fr 1fr',
+        gap: '8px',
+        flex: 1,
+        overflow: 'hidden',
+        minHeight: 0
+      }}>
         <GameColumn
           title="Français"
           items={state.visibleItems.french}

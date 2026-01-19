@@ -100,10 +100,10 @@ export default function LearningPage() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-900">
-      {/* Navigation */}
-      <div className="sticky top-0 z-50 bg-neutral-900/95 backdrop-blur border-b border-neutral-800 px-4 py-3">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+    <main className={`${phase === 'test' ? 'h-screen md:min-h-screen' : 'min-h-screen'} bg-neutral-900`}>
+      {/* Navigation - Hidden on mobile during test phase */}
+      <div className={`sticky top-0 z-50 bg-neutral-900/95 backdrop-blur border-b border-neutral-800 px-4 py-3 ${phase === 'test' ? 'hidden md:flex' : 'flex'}`}>
+        <div className="max-w-6xl mx-auto flex items-center justify-between w-full">
           <Link
             href="/"
             className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"

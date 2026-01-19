@@ -50,7 +50,16 @@ export function MatchGame({ config, onComplete }: MatchGameProps) {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 py-8">
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: '#0a0e14',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
       <GameBoard
         state={game.state}
         progress={game.progress}
