@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { StudyTable } from '@/components/learning/StudyTable'
 import { MatchGame } from '@/components/game/MatchGame'
+import { Navbar } from '@/components/layout/Navbar'
 import { functionWords } from '@/data/function-words/articles'
 import {
   getBatch,
@@ -100,25 +101,15 @@ export default function LearningPage() {
   }
 
   return (
-    <main className={`${phase === 'test' ? 'h-screen md:min-h-screen' : 'min-h-screen'} bg-neutral-900`}>
-      {/* Navigation - Hidden on mobile during test phase */}
-      <div className={`sticky top-0 z-50 bg-neutral-900/95 backdrop-blur border-b border-neutral-800 px-4 py-3 ${phase === 'test' ? 'hidden md:flex' : 'flex'}`}>
-        <div className="max-w-6xl mx-auto flex items-center justify-between w-full">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
-          >
-            <span>←</span>
-            <span>Back to Modes</span>
-          </Link>
-
-          <div className="flex items-center gap-4">
+    <>
+      <Navbar>
+        <div className="flex items-center gap-4">
             {currentBatchIndex > 0 && (
               <button
                 onClick={handlePreviousBatch}
-                className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-medium rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-medium rounded-lg transition-colors"
               >
-                ← Previous
+                ← Prev
               </button>
             )}
 
@@ -142,16 +133,16 @@ export default function LearningPage() {
             {!isLastBatch && (
               <button
                 onClick={handleNextBatch}
-                className="px-4 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-medium rounded-lg transition-colors"
               >
-                Next Batch →
+                Next →
               </button>
             )}
-          </div>
         </div>
-      </div>
+      </Navbar>
 
-      {/* Study Phase */}
+      <main style={{ paddingTop: '57px', minHeight: '100vh', backgroundColor: '#171717' }}>
+        {/* Study Phase */}
       {phase === 'study' && (
         <div className="py-12 px-4">
           <StudyTable
@@ -227,6 +218,7 @@ export default function LearningPage() {
           key={gameKey}
           config={gameConfig}
           onComplete={handleTestComplete}
+          showNavbar={true}
         />
       )}
 
@@ -278,6 +270,7 @@ export default function LearningPage() {
           </div>
         </div>
       )}
-    </main>
+      </main>
+    </>
   )
 }

@@ -118,7 +118,10 @@ export function GameBoard({
         gap: '8px',
         flex: 1,
         overflow: 'hidden',
-        minHeight: 0
+        minHeight: 0,
+        maxWidth: hiddenColumn ? '800px' : 'none',
+        margin: hiddenColumn ? '0 auto' : '0',
+        width: '100%'
       }}>
         <GameColumn
           title="Français"

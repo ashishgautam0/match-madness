@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Navbar } from '@/components/layout/Navbar'
 
 /**
  * Mode selection screen
@@ -8,7 +9,25 @@ import Link from 'next/link'
  */
 export function ModeSelector() {
   return (
-    <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4">
+    <>
+      <Navbar showBackButton={false}>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/learning"
+            className="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Learning Mode
+          </Link>
+          <Link
+            href="/practice"
+            className="px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Practice Mode
+          </Link>
+        </div>
+      </Navbar>
+
+      <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4" style={{ paddingTop: '57px' }}>
       <div className="w-full max-w-2xl space-y-8">
         {/* Title */}
         <div className="text-center space-y-2">
@@ -70,5 +89,6 @@ export function ModeSelector() {
         </div>
       </div>
     </div>
+    </>
   )
 }

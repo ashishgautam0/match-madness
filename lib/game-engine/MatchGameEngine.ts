@@ -7,7 +7,7 @@ import type {
   GameProgress
 } from '@/types/game'
 import { generatePool } from './RepetitionManager'
-import { validateMatch } from './Validator'
+import { validateMatch, validateTwoColumnMatch } from './Validator'
 import { shuffle } from './Shuffler'
 
 /**
@@ -173,7 +173,11 @@ export class MatchGameEngine {
     streak: number
     matchedId?: string
   } {
-    const isValid = validateMatch(this.state.selection)
+    // Use appropriate validation based on column mode
+    const isTwoColumnMode = this.config.columnMode === 'two-columns'
+    const isValid = isTwoColumnMode
+      ? validateTwoColumnMatch(this.state.selection)
+      : validateMatch(this.state.selection)
 
     if (!isValid) {
       // DON'T clear selection here - let the hook handle it for animation

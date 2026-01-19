@@ -199,3 +199,43 @@ export function validateCheckMode(selection: Selection): {
     hasMatch: false,
   }
 }
+
+/**
+ * Validates a 2-column mode match (used when one column is hidden)
+ * @param selection - Current user selection
+ * @returns True if the pair matches
+ */
+export function validateTwoColumnMatch(selection: Selection): boolean {
+  const { french, english, type } = selection
+
+  // Count how many items are selected
+  const selectionCount = [french, english, type].filter(item => item !== null).length
+
+  // Must have exactly 2 selections
+  if (selectionCount !== 2) {
+    return false
+  }
+
+  // Check French-English pair
+  if (french && english && !type) {
+    const match = french.english === english.english
+    console.log('🔍 2-COLUMN VALIDATION (French-English):')
+    console.log('  French word:', french.french, '→', french.english)
+    console.log('  English card:', english.english)
+    console.log('  Match?', match)
+    return match
+  }
+
+  // Check French-Type pair
+  if (french && type && !english) {
+    const match = french.type === type.type
+    console.log('🔍 2-COLUMN VALIDATION (French-Type):')
+    console.log('  French word:', french.french, '→', french.type)
+    console.log('  Type card:', type.type)
+    console.log('  Match?', match)
+    return match
+  }
+
+  // English-Type pair shouldn't happen in 2-column mode
+  return false
+}

@@ -31,7 +31,14 @@ export function useMatchGame(config: GameConfig) {
 
   // State
   const [state, setState] = useState<GameState>(engine.getState())
-  const [progress, setProgress] = useState(engine.getProgress())
+  const initialProgress = engine.getProgress()
+  console.log('🎮 INITIAL GAME STATE:', {
+    completed: initialProgress.completed,
+    total: initialProgress.total,
+    uniqueWords: initialProgress.uniqueWordsLearned,
+    totalUniqueWords: initialProgress.totalUniqueWords,
+  })
+  const [progress, setProgress] = useState(initialProgress)
   const [wrongAttempts, setWrongAttempts] = useState(0)
   const [startTime] = useState(Date.now())
   const [endTime, setEndTime] = useState<number | null>(null)
@@ -86,6 +93,9 @@ export function useMatchGame(config: GameConfig) {
           if (checkResult.hasMatch) {
             // Correct match in 2-column mode - advance the game
             const result = engine.processSelection()
+            console.log('🎯 2-COLUMN MODE: Match processed!', result)
+            console.log('  - New completed count:', result)
+            console.log('  - Current progress BEFORE update:', engine.getProgress())
 
             play('correct')
             trigger('medium')
@@ -111,12 +121,15 @@ export function useMatchGame(config: GameConfig) {
 
               // Call completeMatch to refill columns and clear selection
               const currentSelection = engine.getState().selection
+              console.log('  - Selection before completeMatch:', currentSelection)
               if (typeof (engine as any).completeMatch === 'function') {
                 (engine as any).completeMatch(currentSelection)
               }
               // Update React state to show new items
+              const newProgress = engine.getProgress()
+              console.log('  - Progress AFTER completeMatch:', newProgress)
               setState(engine.getState())
-              setProgress(engine.getProgress())
+              setProgress(newProgress)
             }, 300)
           } else {
             // Wrong match in 2-column mode
