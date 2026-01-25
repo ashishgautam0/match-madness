@@ -263,11 +263,16 @@ export class MatchGameEngine {
    * @param selection - The selection that was matched (contains instanceIds)
    */
   public completeMatch(selection: Selection): void {
-    // Get current visible sourceIds (excluding the matched item)
-    const matchedSourceId = selection.french!.sourceId || selection.french!.id
-    const visibleSourceIds = new Set<string>()
+    // Get the matched item from whichever column has a selection
+    const matchedItem = selection.french || selection.english || selection.type
+    if (!matchedItem) {
+      console.error('❌ No matched item in completeMatch!')
+      return
+    }
+    const matchedSourceId = matchedItem.sourceId || matchedItem.id
 
     // Collect all visible sourceIds except the one being replaced
+    const visibleSourceIds = new Set<string>()
     this.state.visibleItems.french.forEach(item => {
       const sourceId = item.sourceId || item.id
       if (sourceId !== matchedSourceId) {
@@ -310,21 +315,24 @@ export class MatchGameEngine {
     }
 
     if (!newItem) {
-      // No suitable item found, just remove matched items
-      // Handle 2-column mode where one selection might be null
+      // No suitable item found, just remove matched items from ALL columns
+      // In 2-column mode, we need to find the corresponding item in the hidden column by sourceId
       console.warn('⚠️ No new item available - removing matched items without replacement')
       this.state = {
         ...this.state,
         visibleItems: {
-          french: this.state.visibleItems.french.filter(item =>
-            !selection.french || item.instanceId !== selection.french.instanceId
-          ),
-          english: this.state.visibleItems.english.filter(item =>
-            !selection.english || item.instanceId !== selection.english.instanceId
-          ),
-          type: this.state.visibleItems.type.filter(item =>
-            !selection.type || item.instanceId !== selection.type.instanceId
-          ),
+          french: this.state.visibleItems.french.filter(item => {
+            const sourceId = item.sourceId || item.id
+            return sourceId !== matchedSourceId
+          }),
+          english: this.state.visibleItems.english.filter(item => {
+            const sourceId = item.sourceId || item.id
+            return sourceId !== matchedSourceId
+          }),
+          type: this.state.visibleItems.type.filter(item => {
+            const sourceId = item.sourceId || item.id
+            return sourceId !== matchedSourceId
+          }),
         },
         selection: { french: null, english: null, type: null },
       }
@@ -336,18 +344,21 @@ export class MatchGameEngine {
     const englishInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
     const typeInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
 
-    // Replace only the matched item in each column, keeping all others in place
-    // Handle 2-column mode where one selection might be null
+    // Replace the matched item in ALL columns by sourceId (not just the selected ones)
+    // This ensures all 3 columns stay in sync, even in 2-column mode
     const newVisibleItems = {
-      french: this.state.visibleItems.french.map(item =>
-        selection.french && item.instanceId === selection.french.instanceId ? frenchInstance : item
-      ),
-      english: this.state.visibleItems.english.map(item =>
-        selection.english && item.instanceId === selection.english.instanceId ? englishInstance : item
-      ),
-      type: this.state.visibleItems.type.map(item =>
-        selection.type && item.instanceId === selection.type.instanceId ? typeInstance : item
-      ),
+      french: this.state.visibleItems.french.map(item => {
+        const sourceId = item.sourceId || item.id
+        return sourceId === matchedSourceId ? frenchInstance : item
+      }),
+      english: this.state.visibleItems.english.map(item => {
+        const sourceId = item.sourceId || item.id
+        return sourceId === matchedSourceId ? englishInstance : item
+      }),
+      type: this.state.visibleItems.type.map(item => {
+        const sourceId = item.sourceId || item.id
+        return sourceId === matchedSourceId ? typeInstance : item
+      }),
     }
 
     this.state = {
