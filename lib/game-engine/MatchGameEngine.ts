@@ -28,32 +28,26 @@ export class MatchGameEngine {
   private adaptiveManager: AdaptiveRepetitionManager | null = null
   private useAdaptiveMode: boolean = false
 
-  constructor(config: GameConfig, useAdaptiveRepetition: boolean = true) {
+  constructor(config: GameConfig, useAdaptiveRepetition: boolean = false) {
     this.config = config
-    this.useAdaptiveMode = useAdaptiveRepetition
+    // Disable adaptive mode for now - causes mismatched words between columns
+    this.useAdaptiveMode = false
 
-    if (useAdaptiveRepetition) {
-      // Use adaptive repetition system - no cap on matches
-      this.adaptiveManager = new AdaptiveRepetitionManager(config.items)
-      this.pool = []
-      this.currentIndex = 0
-    } else {
-      // Use old static system
-      this.pool = generatePool(
-        config.items,
-        config.totalMatches,
-        config.minRepetitions,
-        config.maxRepetitions
-      )
-      this.currentIndex = 0
-    }
+    // Use static pool system
+    this.pool = generatePool(
+      config.items,
+      config.totalMatches,
+      config.minRepetitions,
+      config.maxRepetitions
+    )
+    this.currentIndex = 0
 
     // Initialize state
     this.state = {
       visibleItems: this.generateInitialVisibleItems(),
       selection: { french: null, english: null, type: null },
       completed: 0,
-      total: this.useAdaptiveMode ? 150 : config.totalMatches, // Start at 150 in adaptive mode
+      total: config.totalMatches,
       streak: 0,
       isProcessing: false,
       isComplete: false,
@@ -205,7 +199,13 @@ export class MatchGameEngine {
       ? validateTwoColumnMatch(this.state.selection)
       : validateMatch(this.state.selection)
 
-    const sourceId = this.state.selection.french!.sourceId || this.state.selection.french!.id
+    // Get sourceId from whichever item is available (french, english, or type)
+    const selectedItem = this.state.selection.french || this.state.selection.english || this.state.selection.type
+    if (!selectedItem) {
+      console.error('❌ No item selected in processSelection!')
+      return { isValid: false, isComplete: false, streak: 0 }
+    }
+    const sourceId = selectedItem.sourceId || selectedItem.id
 
     if (!isValid) {
       // Record mistake in adaptive system
@@ -233,7 +233,7 @@ export class MatchGameEngine {
     }
 
     // Valid match - DON'T refill columns yet, let hook handle it for animation
-    const matchedId = this.state.selection.french!.id
+    const matchedId = selectedItem.id
 
     // Record correct match in adaptive system
     if (this.useAdaptiveMode && this.adaptiveManager) {
@@ -364,6 +364,16 @@ export class MatchGameEngine {
     this.state = {
       ...this.state,
       selection: { french: null, english: null, type: null },
+    }
+  }
+
+  /**
+   * Resets the streak to 0 (called on wrong matches)
+   */
+  public resetStreak(): void {
+    this.state = {
+      ...this.state,
+      streak: 0,
     }
   }
 

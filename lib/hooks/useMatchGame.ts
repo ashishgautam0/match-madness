@@ -31,14 +31,7 @@ export function useMatchGame(config: GameConfig) {
 
   // State
   const [state, setState] = useState<GameState>(engine.getState())
-  const initialProgress = engine.getProgress()
-  console.log('🎮 INITIAL GAME STATE:', {
-    completed: initialProgress.completed,
-    total: initialProgress.total,
-    uniqueWords: initialProgress.uniqueWordsLearned,
-    totalUniqueWords: initialProgress.totalUniqueWords,
-  })
-  const [progress, setProgress] = useState(initialProgress)
+  const [progress, setProgress] = useState(engine.getProgress())
   const [wrongAttempts, setWrongAttempts] = useState(0)
   const [startTime] = useState(Date.now())
   const [endTime, setEndTime] = useState<number | null>(null)
@@ -133,19 +126,10 @@ export function useMatchGame(config: GameConfig) {
             }, 300)
           } else {
             // Wrong match in 2-column mode
-            // IMPORTANT: Must call processSelection to update total counter
-            const result = engine.processSelection()
-            console.log('❌ 2-COLUMN MODE: Wrong match processed!', result)
-            console.log('  - Progress after mistake:', engine.getProgress())
-
             play('wrong')
             trigger('error')
             setWrongAttempts(prev => prev + 1)
-
-            // Update state to reset streak (but keep selection)
-            setState(engine.getState())
-            // Update progress to reflect increased total from mistake
-            setProgress(engine.getProgress())
+            engine.resetStreak()
 
             // Clear after animation
             setTimeout(() => {
@@ -260,18 +244,10 @@ export function useMatchGame(config: GameConfig) {
           }, 300)
         } else {
           // Partial or no match - show feedback but don't advance
-          // NOTE: processSelection was already called above at line 204
-          console.log('❌ 3-COLUMN MODE: Wrong match (processSelection already called)')
-          console.log('  - Progress after mistake:', engine.getProgress())
-
           play('wrong')
           trigger('error')
           setWrongAttempts(prev => prev + 1)
-
-          // Update state to reset streak (but keep selection)
-          setState(engine.getState())
-          // Update progress to reflect increased total from mistake
-          setProgress(engine.getProgress())
+          engine.resetStreak()
 
           // Delay clearing selection until after animation completes
           setTimeout(() => {
