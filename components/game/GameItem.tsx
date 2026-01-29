@@ -29,24 +29,22 @@ function GameItemComponent({ item, column, isSelected, onClick, showWrongAnimati
     ? item.english
     : item.type
 
-  // Base button styles
+  // Base button styles - Duolingo style with 3D border effect
   const getButtonStyle = () => {
-    let backgroundColor = '#1a1f2e'
-    let borderColor = '#2a3441'
-    let boxShadow = '0 2px 4px rgba(0,0,0,0.3)'
+    // Default: dark background matching page, subtle border with 3D bottom
+    let backgroundColor = '#0a0e14'
+    let borderColor = '#3c4a5e'
+    let borderBottomColor = '#2a3441'
 
     if (showWrongAnimation) {
-      backgroundColor = 'rgba(239, 68, 68, 0.15)'
       borderColor = '#ef4444'
-      boxShadow = '0 0 12px rgba(239, 68, 68, 0.4)'
+      borderBottomColor = '#b91c1c'
     } else if (showCorrectAnimation) {
-      backgroundColor = 'rgba(88, 204, 2, 0.15)'
       borderColor = '#58cc02'
-      boxShadow = '0 0 12px rgba(88, 204, 2, 0.4)'
+      borderBottomColor = '#3d8c01'
     } else if (isSelected) {
-      backgroundColor = 'rgba(28, 176, 246, 0.15)'
       borderColor = '#1cb0f6'
-      boxShadow = '0 0 12px rgba(28, 176, 246, 0.3)'
+      borderBottomColor = '#1489bd'
     }
 
     return {
@@ -54,36 +52,32 @@ function GameItemComponent({ item, column, isSelected, onClick, showWrongAnimati
       position: 'relative' as const,
       backgroundColor,
       border: `2px solid ${borderColor}`,
+      borderBottom: `4px solid ${borderBottomColor}`,
       borderRadius: '12px',
       color: '#ffffff',
-      fontSize: '14px',
+      fontSize: '16px',
       fontWeight: '600',
+      letterSpacing: '0.5px',
+      textShadow: '0 1px 2px rgba(0,0,0,0.3)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: 0,
       cursor: 'pointer',
-      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-      boxShadow,
-      padding: '0 8px'
+      transition: 'all 0.15s ease',
+      padding: '0 12px'
     }
   }
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!showWrongAnimation && !showCorrectAnimation) {
-      e.currentTarget.style.backgroundColor = isSelected ? 'rgba(28, 176, 246, 0.25)' : '#242b3d'
-      e.currentTarget.style.borderColor = isSelected ? '#1cb0f6' : '#3a4558'
-      e.currentTarget.style.transform = 'translateY(-2px)'
-      e.currentTarget.style.boxShadow = isSelected ? '0 4px 16px rgba(28, 176, 246, 0.4)' : '0 4px 12px rgba(0,0,0,0.4)'
+      e.currentTarget.style.borderColor = isSelected ? '#1cb0f6' : '#4d5d73'
     }
   }
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!showWrongAnimation && !showCorrectAnimation) {
-      e.currentTarget.style.backgroundColor = isSelected ? 'rgba(28, 176, 246, 0.15)' : '#1a1f2e'
-      e.currentTarget.style.borderColor = isSelected ? '#1cb0f6' : '#2a3441'
-      e.currentTarget.style.transform = 'translateY(0)'
-      e.currentTarget.style.boxShadow = isSelected ? '0 0 12px rgba(28, 176, 246, 0.3)' : '0 2px 4px rgba(0,0,0,0.3)'
+      e.currentTarget.style.borderColor = isSelected ? '#1cb0f6' : '#3c4a5e'
     }
   }
 

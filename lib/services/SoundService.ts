@@ -24,11 +24,20 @@ class SoundService {
 
     const loadPromises = Object.entries(SOUND_PATHS).map(([type, path]) => {
       return new Promise<void>((resolve, reject) => {
+        // For correct.wav, use sprite to only play first 2 seconds (to cut off echo)
+        const isCorrectSound = path.includes('correct.wav')
+
         // Load real sound files from public/sounds/
         const sound = new Howl({
           src: [path],
           volume: this.volume,
           preload: true,
+          // Use sprite for correct sound to limit to 2 seconds
+          ...(isCorrectSound && {
+            sprite: {
+              main: [0, 2000] // Start at 0ms, play for 2000ms (2 seconds)
+            }
+          }),
           onload: () => {
             console.log(`✓ Loaded sound: ${type} from ${path}`)
             this.sounds.set(type as SoundType, sound)
@@ -159,7 +168,14 @@ class SoundService {
 
     const volume = volumeOverride ?? this.volume
     sound.volume(volume)
-    sound.play()
+
+    // For sounds with sprites, play the 'main' sprite
+    const path = SOUND_PATHS[type]
+    if (path && path.includes('correct.wav')) {
+      sound.play('main')
+    } else {
+      sound.play()
+    }
   }
 
   /**
