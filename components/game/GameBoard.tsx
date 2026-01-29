@@ -115,11 +115,11 @@ export function GameBoard({
       <div style={{
         display: 'grid',
         gridTemplateColumns: hiddenColumn ? '1fr 1fr' : '1fr 1fr 1fr',
-        gap: '8px',
+        gap: hiddenColumn ? '24px' : '8px',
         flex: 1,
         overflow: 'hidden',
         minHeight: 0,
-        maxWidth: hiddenColumn ? '800px' : 'none',
+        maxWidth: hiddenColumn ? '600px' : 'none',
         margin: hiddenColumn ? '0 auto' : '0',
         width: '100%'
       }}>
