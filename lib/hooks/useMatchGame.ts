@@ -31,7 +31,14 @@ export function useMatchGame(config: GameConfig) {
 
   // State
   const [state, setState] = useState<GameState>(engine.getState())
-  const [progress, setProgress] = useState(engine.getProgress())
+  const initialProgress = engine.getProgress()
+  console.log('🎮 INITIAL GAME STATE:', {
+    completed: initialProgress.completed,
+    total: initialProgress.total,
+    uniqueWords: initialProgress.uniqueWordsLearned,
+    totalUniqueWords: initialProgress.totalUniqueWords,
+  })
+  const [progress, setProgress] = useState(initialProgress)
   const [wrongAttempts, setWrongAttempts] = useState(0)
   const [startTime] = useState(Date.now())
   const [endTime, setEndTime] = useState<number | null>(null)

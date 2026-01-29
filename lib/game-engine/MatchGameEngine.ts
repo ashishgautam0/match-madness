@@ -7,7 +7,6 @@ import type {
   GameProgress
 } from '@/types/game'
 import { generatePool } from './RepetitionManager'
-import { AdaptiveRepetitionManager } from './AdaptiveRepetitionManager'
 import { validateMatch, validateTwoColumnMatch } from './Validator'
 import { shuffle } from './Shuffler'
 
@@ -25,21 +24,18 @@ export class MatchGameEngine {
   private state: GameState
   private readonly config: GameConfig
   private readonly learnedWordIds: Set<string> = new Set()
-  private adaptiveManager: AdaptiveRepetitionManager | null = null
-  private useAdaptiveMode: boolean = false
 
-  constructor(config: GameConfig, useAdaptiveRepetition: boolean = false) {
+  constructor(config: GameConfig) {
     this.config = config
-    // Disable adaptive mode for now - causes mismatched words between columns
-    this.useAdaptiveMode = false
 
-    // Use static pool system
+    // Generate item pool with repetitions
     this.pool = generatePool(
       config.items,
       config.totalMatches,
       config.minRepetitions,
       config.maxRepetitions
     )
+
     this.currentIndex = 0
 
     // Initialize state
@@ -63,32 +59,18 @@ export class MatchGameEngine {
     const uniqueItems: GameItem[] = []
     const seenSourceIds = new Set<string>()
 
-    if (this.useAdaptiveMode && this.adaptiveManager) {
-      // Use adaptive manager
-      while (uniqueItems.length < count) {
-        const item = this.adaptiveManager.getNextItem()
-        if (!item) break
+    // Collect unique words for visible batch
+    while (uniqueItems.length < count && this.currentIndex < this.pool.length) {
+      const item = this.pool[this.currentIndex]
+      const sourceId = item.sourceId || item.id
 
-        const sourceId = item.sourceId || item.id
-        if (!seenSourceIds.has(sourceId)) {
-          uniqueItems.push(item)
-          seenSourceIds.add(sourceId)
-        }
-      }
-    } else {
-      // Use static pool
-      while (uniqueItems.length < count && this.currentIndex < this.pool.length) {
-        const item = this.pool[this.currentIndex]
-        const sourceId = item.sourceId || item.id
-
-        if (!seenSourceIds.has(sourceId)) {
-          uniqueItems.push(item)
-          seenSourceIds.add(sourceId)
-          this.currentIndex++
-        } else {
-          // Skip this item, will use it later
-          this.currentIndex++
-        }
+      if (!seenSourceIds.has(sourceId)) {
+        uniqueItems.push(item)
+        seenSourceIds.add(sourceId)
+        this.currentIndex++
+      } else {
+        // Skip this item, will use it later
+        this.currentIndex++
       }
     }
 
@@ -118,17 +100,15 @@ export class MatchGameEngine {
    * @returns Array of items
    */
   private getNextItems(count: number): GameItem[] {
-    if (this.useAdaptiveMode && this.adaptiveManager) {
-      return this.adaptiveManager.getNextItems(count)
-    }
-
     const items: GameItem[] = []
+
     for (let i = 0; i < count; i++) {
       if (this.currentIndex < this.pool.length) {
         items.push(this.pool[this.currentIndex])
         this.currentIndex++
       }
     }
+
     return items
   }
 
@@ -199,54 +179,27 @@ export class MatchGameEngine {
       ? validateTwoColumnMatch(this.state.selection)
       : validateMatch(this.state.selection)
 
-    // Get sourceId from whichever item is available (french, english, or type)
-    const selectedItem = this.state.selection.french || this.state.selection.english || this.state.selection.type
-    if (!selectedItem) {
-      console.error('❌ No item selected in processSelection!')
-      return { isValid: false, isComplete: false, streak: 0 }
-    }
-    const sourceId = selectedItem.sourceId || selectedItem.id
-
     if (!isValid) {
-      // Record mistake in adaptive system
-      if (this.useAdaptiveMode && this.adaptiveManager) {
-        this.adaptiveManager.recordMistake(sourceId)
-        const newTotal = this.state.total + 5
-        console.log('❌ Mistake recorded for:', sourceId, '- will appear 5x more')
-        console.log('   Total before:', this.state.total, '→ after:', newTotal)
-
-        // Increase total matches by 5 (since we added 5 more copies)
-        this.state = {
-          ...this.state,
-          total: newTotal,
-          streak: 0,
-        }
-      } else {
-        // Just reset streak in non-adaptive mode
-        this.state = {
-          ...this.state,
-          streak: 0,
-        }
+      // DON'T clear selection here - let the hook handle it for animation
+      // Just reset streak
+      this.state = {
+        ...this.state,
+        streak: 0,
       }
 
       return { isValid: false, isComplete: false, streak: 0 }
     }
 
     // Valid match - DON'T refill columns yet, let hook handle it for animation
-    const matchedId = selectedItem.id
-
-    // Record correct match in adaptive system
-    if (this.useAdaptiveMode && this.adaptiveManager) {
-      this.adaptiveManager.recordCorrect(sourceId)
-      console.log('✅ Correct match for:', sourceId)
-    }
+    const matchedId = this.state.selection.french!.id
+    const sourceId = this.state.selection.french!.sourceId || matchedId
 
     // Track this unique word as learned
     this.learnedWordIds.add(sourceId)
 
     const newCompleted = this.state.completed + 1
     const newStreak = this.state.streak + 1
-    const isComplete = this.useAdaptiveMode ? false : (newCompleted >= this.state.total) // Never complete in adaptive mode
+    const isComplete = newCompleted >= this.state.total
 
     this.state = {
       ...this.state,
@@ -263,16 +216,11 @@ export class MatchGameEngine {
    * @param selection - The selection that was matched (contains instanceIds)
    */
   public completeMatch(selection: Selection): void {
-    // Get the matched item from whichever column has a selection
-    const matchedItem = selection.french || selection.english || selection.type
-    if (!matchedItem) {
-      console.error('❌ No matched item in completeMatch!')
-      return
-    }
-    const matchedSourceId = matchedItem.sourceId || matchedItem.id
+    // Get current visible sourceIds (excluding the matched item)
+    const matchedSourceId = selection.french!.sourceId || selection.french!.id
+    const visibleSourceIds = new Set<string>()
 
     // Collect all visible sourceIds except the one being replaced
-    const visibleSourceIds = new Set<string>()
     this.state.visibleItems.french.forEach(item => {
       const sourceId = item.sourceId || item.id
       if (sourceId !== matchedSourceId) {
@@ -282,57 +230,29 @@ export class MatchGameEngine {
 
     // Find next item that doesn't duplicate any visible word
     let newItem: GameItem | undefined
+    const startIndex = this.currentIndex
 
-    if (this.useAdaptiveMode && this.adaptiveManager) {
-      // Use adaptive manager to get next item
-      let attempts = 0
-      const maxAttempts = 100
-      while (attempts < maxAttempts) {
-        const candidate = this.adaptiveManager.getNextItem()
-        if (!candidate) break
+    while (this.currentIndex < this.pool.length) {
+      const candidate = this.pool[this.currentIndex]
+      const candidateSourceId = candidate.sourceId || candidate.id
 
-        const candidateSourceId = candidate.sourceId || candidate.id
-        if (!visibleSourceIds.has(candidateSourceId)) {
-          newItem = candidate
-          break
-        }
-        attempts++
-      }
-    } else {
-      // Use static pool
-      while (this.currentIndex < this.pool.length) {
-        const candidate = this.pool[this.currentIndex]
-        const candidateSourceId = candidate.sourceId || candidate.id
-
-        if (!visibleSourceIds.has(candidateSourceId)) {
-          newItem = candidate
-          this.currentIndex++
-          break
-        }
-
+      if (!visibleSourceIds.has(candidateSourceId)) {
+        newItem = candidate
         this.currentIndex++
+        break
       }
+
+      this.currentIndex++
     }
 
     if (!newItem) {
-      // No suitable item found, just remove matched items from ALL columns
-      // In 2-column mode, we need to find the corresponding item in the hidden column by sourceId
-      console.warn('⚠️ No new item available - removing matched items without replacement')
+      // No suitable item found, just remove matched items
       this.state = {
         ...this.state,
         visibleItems: {
-          french: this.state.visibleItems.french.filter(item => {
-            const sourceId = item.sourceId || item.id
-            return sourceId !== matchedSourceId
-          }),
-          english: this.state.visibleItems.english.filter(item => {
-            const sourceId = item.sourceId || item.id
-            return sourceId !== matchedSourceId
-          }),
-          type: this.state.visibleItems.type.filter(item => {
-            const sourceId = item.sourceId || item.id
-            return sourceId !== matchedSourceId
-          }),
+          french: this.state.visibleItems.french.filter(item => item.instanceId !== selection.french!.instanceId!),
+          english: this.state.visibleItems.english.filter(item => item.instanceId !== selection.english!.instanceId!),
+          type: this.state.visibleItems.type.filter(item => item.instanceId !== selection.type!.instanceId!),
         },
         selection: { french: null, english: null, type: null },
       }
@@ -344,21 +264,18 @@ export class MatchGameEngine {
     const englishInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
     const typeInstance = { ...newItem, sourceId: newItem.sourceId || newItem.id, instanceId: `${newItem.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }
 
-    // Replace the matched item in ALL columns by sourceId (not just the selected ones)
-    // This ensures all 3 columns stay in sync, even in 2-column mode
+    // Replace only the matched item in each column, keeping all others in place
+    // Handle 2-column mode where one selection might be null
     const newVisibleItems = {
-      french: this.state.visibleItems.french.map(item => {
-        const sourceId = item.sourceId || item.id
-        return sourceId === matchedSourceId ? frenchInstance : item
-      }),
-      english: this.state.visibleItems.english.map(item => {
-        const sourceId = item.sourceId || item.id
-        return sourceId === matchedSourceId ? englishInstance : item
-      }),
-      type: this.state.visibleItems.type.map(item => {
-        const sourceId = item.sourceId || item.id
-        return sourceId === matchedSourceId ? typeInstance : item
-      }),
+      french: this.state.visibleItems.french.map(item =>
+        selection.french && item.instanceId === selection.french.instanceId ? frenchInstance : item
+      ),
+      english: this.state.visibleItems.english.map(item =>
+        selection.english && item.instanceId === selection.english.instanceId ? englishInstance : item
+      ),
+      type: this.state.visibleItems.type.map(item =>
+        selection.type && item.instanceId === selection.type.instanceId ? typeInstance : item
+      ),
     }
 
     this.state = {
